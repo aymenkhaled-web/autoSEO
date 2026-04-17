@@ -5,19 +5,48 @@ import { useTheme } from 'next-themes'
 import {
   LayoutDashboard, Globe, Bug, Wrench, BarChart3,
   Settings, Zap, ChevronLeft, ChevronRight, Bell,
-  Sun, Moon, LogOut, User, Menu, X,
+  Sun, Moon, LogOut, Menu, X, Target, Swords,
+  Users, Key, FileText, CreditCard, Puzzle,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useAppStore } from '@/stores/app-store'
 
-const NAV_ITEMS = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/dashboard/sites', icon: Globe, label: 'Sites' },
-  { href: '/dashboard/issues', icon: Bug, label: 'Issues' },
-  { href: '/dashboard/fixes', icon: Wrench, label: 'Fixes' },
-  { href: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
-  { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
+const NAV_GROUPS = [
+  {
+    label: 'Overview',
+    items: [
+      { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+      { href: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
+    ],
+  },
+  {
+    label: 'SEO',
+    items: [
+      { href: '/dashboard/sites', icon: Globe, label: 'Sites' },
+      { href: '/dashboard/issues', icon: Bug, label: 'Issues' },
+      { href: '/dashboard/fixes', icon: Wrench, label: 'Fixes' },
+      { href: '/dashboard/keywords', icon: Target, label: 'Keywords' },
+      { href: '/dashboard/competitors', icon: Swords, label: 'Competitors' },
+    ],
+  },
+  {
+    label: 'Reports',
+    items: [
+      { href: '/dashboard/reports', icon: FileText, label: 'Reports' },
+    ],
+  },
+  {
+    label: 'Account',
+    items: [
+      { href: '/dashboard/team', icon: Users, label: 'Team' },
+      { href: '/dashboard/api-keys', icon: Key, label: 'API Keys' },
+      { href: '/dashboard/billing', icon: CreditCard, label: 'Billing' },
+      { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
+    ],
+  },
 ]
+
+const NAV_ITEMS = NAV_GROUPS.flatMap(g => g.items)
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme()
@@ -60,8 +89,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {NAV_ITEMS.map((item) => {
+      <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-4">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.label}>
+            <AnimatePresence>
+              {sidebarOpen && (
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest px-3 mb-1">
+                  {group.label}
+                </motion.p>
+              )}
+            </AnimatePresence>
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
           const active = location.pathname === item.href || (item.href !== '/dashboard' && location.pathname.startsWith(item.href))
           return (
             <Link key={item.href} to={item.href} onClick={() => setMobileOpen(false)}
@@ -72,7 +112,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               } ${!sidebarOpen ? 'justify-center' : ''}`}>
               {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-primary" />}
-              <item.icon className={`h-4.5 w-4.5 flex-shrink-0 ${active ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} style={{ height: '18px', width: '18px' }} />
+              <item.icon className={`flex-shrink-0 ${active ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} style={{ height: '18px', width: '18px' }} />
               <AnimatePresence>
                 {sidebarOpen && (
                   <motion.span initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }}
@@ -84,7 +124,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </AnimatePresence>
             </Link>
           )
-        })}
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* User footer */}
@@ -142,17 +185,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-                {NAV_ITEMS.map((item) => {
-                  const active = location.pathname === item.href || (item.href !== '/dashboard' && location.pathname.startsWith(item.href))
-                  return (
-                    <Link key={item.href} to={item.href} onClick={() => setMobileOpen(false)}
-                      className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}>
-                      <item.icon className="h-4 w-4 flex-shrink-0" />
-                      {item.label}
-                    </Link>
-                  )
-                })}
+              <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-4">
+                {NAV_GROUPS.map((group) => (
+                  <div key={group.label}>
+                    <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest px-3 mb-1">{group.label}</p>
+                    <div className="space-y-0.5">
+                      {group.items.map((item) => {
+                        const active = location.pathname === item.href || (item.href !== '/dashboard' && location.pathname.startsWith(item.href))
+                        return (
+                          <Link key={item.href} to={item.href} onClick={() => setMobileOpen(false)}
+                            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}>
+                            <item.icon className="h-4 w-4 flex-shrink-0" />
+                            {item.label}
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
               </nav>
               <div className="px-3 py-3 border-t border-border">
                 <div className="flex items-center gap-3 px-2 py-2">

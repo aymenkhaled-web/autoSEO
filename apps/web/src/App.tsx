@@ -9,22 +9,28 @@ import SitesPage from '@/pages/SitesPage'
 import IssuesPage from '@/pages/IssuesPage'
 import FixesPage from '@/pages/FixesPage'
 import SettingsPage from '@/pages/SettingsPage'
+import AnalyticsPage from '@/pages/AnalyticsPage'
+import KeywordsPage from '@/pages/KeywordsPage'
+import CompetitorsPage from '@/pages/CompetitorsPage'
+import TeamPage from '@/pages/TeamPage'
+import ApiKeysPage from '@/pages/ApiKeysPage'
+import ReportsPage from '@/pages/ReportsPage'
+import BillingPage from '@/pages/BillingPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { loading, isAuthenticated } = useAuth()
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen" style={{ background: 'var(--color-bg-base)' }}>
+      <div className="flex items-center justify-center h-screen bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="relative">
-            <div className="w-12 h-12 rounded-full border-2 border-t-transparent animate-spin"
-              style={{ borderColor: 'rgba(99,102,241,0.3)', borderTopColor: '#6366f1' }} />
+            <div className="w-12 h-12 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-6 h-6 rounded-full animate-pulse" style={{ background: 'rgba(99,102,241,0.2)' }} />
+              <div className="w-6 h-6 rounded-full bg-primary/20 animate-pulse" />
             </div>
           </div>
-          <p className="text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>Loading AutoSEO…</p>
+          <p className="text-sm font-medium text-muted-foreground">Loading AutoSEO…</p>
         </div>
       </div>
     )
@@ -37,76 +43,52 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function DashboardRoute({ children }: { children: React.ReactNode }) {
+  return (
+    <ProtectedRoute>
+      <DashboardLayout>{children}</DashboardLayout>
+    </ProtectedRoute>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public landing */}
+        {/* Public */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
 
-        {/* Protected app */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <DashboardLayout><DashboardPage /></DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/sites" element={
-          <ProtectedRoute>
-            <DashboardLayout><SitesPage /></DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/issues" element={
-          <ProtectedRoute>
-            <DashboardLayout><IssuesPage /></DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/fixes" element={
-          <ProtectedRoute>
-            <DashboardLayout><FixesPage /></DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/reports" element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <div className="space-y-6">
-                <div>
-                  <h1 className="text-2xl font-black" style={{ color: 'var(--color-text-primary)' }}>Reports</h1>
-                  <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-                    PDF reports, email digests and analytics — coming in the next phase.
-                  </p>
-                </div>
-                <div className="rounded-2xl p-12 border flex flex-col items-center text-center"
-                  style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                    style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)' }}>
-                    <span className="text-2xl">📊</span>
-                  </div>
-                  <p className="font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Reports — Phase 6</p>
-                  <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                    SEO score history, PDF exports, weekly digests, and Slack notifications.
-                  </p>
-                </div>
-              </div>
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/settings" element={
-          <ProtectedRoute>
-            <DashboardLayout><SettingsPage /></DashboardLayout>
-          </ProtectedRoute>
-        } />
+        {/* Dashboard */}
+        <Route path="/dashboard" element={<DashboardRoute><DashboardPage /></DashboardRoute>} />
+        <Route path="/dashboard/sites" element={<DashboardRoute><SitesPage /></DashboardRoute>} />
+        <Route path="/dashboard/issues" element={<DashboardRoute><IssuesPage /></DashboardRoute>} />
+        <Route path="/dashboard/fixes" element={<DashboardRoute><FixesPage /></DashboardRoute>} />
+        <Route path="/dashboard/analytics" element={<DashboardRoute><AnalyticsPage /></DashboardRoute>} />
+        <Route path="/dashboard/keywords" element={<DashboardRoute><KeywordsPage /></DashboardRoute>} />
+        <Route path="/dashboard/competitors" element={<DashboardRoute><CompetitorsPage /></DashboardRoute>} />
+        <Route path="/dashboard/reports" element={<DashboardRoute><ReportsPage /></DashboardRoute>} />
+        <Route path="/dashboard/team" element={<DashboardRoute><TeamPage /></DashboardRoute>} />
+        <Route path="/dashboard/api-keys" element={<DashboardRoute><ApiKeysPage /></DashboardRoute>} />
+        <Route path="/dashboard/billing" element={<DashboardRoute><BillingPage /></DashboardRoute>} />
+        <Route path="/dashboard/settings" element={<DashboardRoute><SettingsPage /></DashboardRoute>} />
+
+        {/* Legacy redirects for old paths */}
+        <Route path="/sites" element={<Navigate to="/dashboard/sites" replace />} />
+        <Route path="/issues" element={<Navigate to="/dashboard/issues" replace />} />
+        <Route path="/fixes" element={<Navigate to="/dashboard/fixes" replace />} />
+        <Route path="/settings" element={<Navigate to="/dashboard/settings" replace />} />
+        <Route path="/reports" element={<Navigate to="/dashboard/reports" replace />} />
 
         {/* 404 */}
         <Route path="*" element={
-          <div className="flex items-center justify-center h-screen" style={{ background: 'var(--color-bg-base)' }}>
+          <div className="flex items-center justify-center h-screen bg-background">
             <div className="text-center">
-              <h1 className="text-8xl font-black gradient-text mb-4">404</h1>
-              <p className="text-lg mb-6" style={{ color: 'var(--color-text-secondary)' }}>Page not found</p>
+              <h1 className="text-8xl font-black bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent mb-4">404</h1>
+              <p className="text-lg text-muted-foreground mb-6">Page not found</p>
               <a href="/"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white"
-                style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}>
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-primary hover:bg-primary/90 transition-colors">
                 Go Home
               </a>
             </div>

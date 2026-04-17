@@ -71,3 +71,6 @@ export const fixesApi = {
   rollback: (issueId: string) =>
     api.post('fixes/rollback', { json: { issue_id: issueId } }).json<any>(),
 }
+
+// Alias for pages that import apiClient directly
+export const apiClient = api

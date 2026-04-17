@@ -258,3 +258,213 @@ class ApiKey(Base):
     last_used_at = Column(DateTime(timezone=True))
     expires_at = Column(DateTime(timezone=True))
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class Keyword(Base):
+    __tablename__ = "keywords"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
+    site_id = Column(UUID(as_uuid=True), ForeignKey("sites.id"), nullable=False)
+    keyword = Column(Text, nullable=False)
+    target_url = Column(Text)
+    intent = Column(Text, default="informational")
+    priority = Column(SmallInteger, default=1)
+    added_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    rankings = relationship("KeywordRanking", back_populates="keyword_ref", cascade="all, delete-orphan")
+
+
+class KeywordRanking(Base):
+    __tablename__ = "keyword_rankings"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    keyword_id = Column(UUID(as_uuid=True), ForeignKey("keywords.id"), nullable=False)
+    site_id = Column(UUID(as_uuid=True), ForeignKey("sites.id"), nullable=False)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
+    position = Column(SmallInteger)
+    previous_position = Column(SmallInteger)
+    search_volume = Column(Integer)
+    cpc_usd = Column(Numeric(8, 2))
+    difficulty = Column(SmallInteger)
+    url = Column(Text)
+    serp_features = Column(ARRAY(Text))
+    country = Column(Text, default="US")
+    device = Column(Text, default="desktop")
+    checked_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    keyword_ref = relationship("Keyword", back_populates="rankings")
+
+
+class Competitor(Base):
+    __tablename__ = "competitors"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
+    site_id = Column(UUID(as_uuid=True), ForeignKey("sites.id"), nullable=False)
+    domain = Column(Text, nullable=False)
+    name = Column(Text)
+    seo_score = Column(SmallInteger)
+    keywords_count = Column(Integer)
+    backlinks_count = Column(Integer)
+    added_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    last_analyzed_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class Backlink(Base):
+    __tablename__ = "backlinks"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    site_id = Column(UUID(as_uuid=True), ForeignKey("sites.id"), nullable=False)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
+    source_url = Column(Text, nullable=False)
+    source_domain = Column(Text, nullable=False)
+    target_url = Column(Text, nullable=False)
+    anchor_text = Column(Text)
+    is_dofollow = Column(Boolean, default=True)
+    domain_rating = Column(SmallInteger)
+    is_new = Column(Boolean, default=False)
+    is_lost = Column(Boolean, default=False)
+    first_seen_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    last_seen_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class TeamMember(Base):
+    __tablename__ = "team_members"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    email = Column(Text, nullable=False)
+    role = Column(Text, nullable=False, default="member")
+    status = Column(Text, nullable=False, default="pending")
+    invited_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    invited_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    accepted_at = Column(DateTime(timezone=True))
+
+
+class IssueComment(Base):
+    __tablename__ = "issue_comments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    issue_id = Column(UUID(as_uuid=True), ForeignKey("issues.id"), nullable=False)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    body = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    type = Column(Text, nullable=False)
+    title = Column(Text, nullable=False)
+    body = Column(Text)
+    data = Column(JSONB)
+    read = Column(Boolean, default=False)
+    read_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class NotificationPreference(Base):
+    __tablename__ = "notification_preferences"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, unique=True)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
+    email_enabled = Column(Boolean, default=True)
+    slack_enabled = Column(Boolean, default=False)
+    in_app_enabled = Column(Boolean, default=True)
+    slack_webhook_url = Column(Text)
+    email_crawl_complete = Column(Boolean, default=True)
+    email_new_issues = Column(Boolean, default=True)
+    email_fix_applied = Column(Boolean, default=True)
+    email_weekly_digest = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class ScheduledReport(Base):
+    __tablename__ = "scheduled_reports"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
+    site_id = Column(UUID(as_uuid=True), ForeignKey("sites.id"))
+    name = Column(Text, nullable=False)
+    type = Column(Text, nullable=False, default="weekly")
+    format = Column(Text, nullable=False, default="pdf")
+    recipients = Column(ARRAY(Text), nullable=False)
+    schedule_cron = Column(Text)
+    last_sent_at = Column(DateTime(timezone=True))
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class UsageEvent(Base):
+    __tablename__ = "usage_events"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    event_type = Column(Text, nullable=False)
+    resource_type = Column(Text)
+    resource_id = Column(UUID(as_uuid=True))
+    event_metadata = Column("metadata", JSONB)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class Webhook(Base):
+    __tablename__ = "webhooks"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
+    name = Column(Text, nullable=False)
+    url = Column(Text, nullable=False)
+    secret = Column(Text, nullable=False)
+    events = Column(ARRAY(Text), nullable=False)
+    enabled = Column(Boolean, default=True)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    deliveries = relationship("WebhookDelivery", back_populates="webhook", cascade="all, delete-orphan")
+
+
+class WebhookDelivery(Base):
+    __tablename__ = "webhook_deliveries"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    webhook_id = Column(UUID(as_uuid=True), ForeignKey("webhooks.id"), nullable=False)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
+    event = Column(Text, nullable=False)
+    payload = Column(JSONB, nullable=False)
+    status_code = Column(SmallInteger)
+    response_body = Column(Text)
+    duration_ms = Column(Integer)
+    success = Column(Boolean)
+    attempted_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    next_retry_at = Column(DateTime(timezone=True))
+
+    webhook = relationship("Webhook", back_populates="deliveries")
+
+
+class AiUsage(Base):
+    __tablename__ = "ai_usage"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
+    model = Column(Text, nullable=False)
+    prompt_tokens = Column(Integer, nullable=False, default=0)
+    completion_tokens = Column(Integer, nullable=False, default=0)
+    total_tokens = Column(Integer, nullable=False, default=0)
+    cost_usd = Column(Numeric(10, 6), nullable=False, default=0)
+    task_type = Column(Text)
+    crawl_id = Column(UUID(as_uuid=True), ForeignKey("crawls.id"))
+    issue_id = Column(UUID(as_uuid=True), ForeignKey("issues.id"))
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)

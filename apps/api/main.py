@@ -70,6 +70,14 @@ from routers.issues import router as issues_router
 from routers.fixes import router as fixes_router
 from routers.snippet import router as snippet_router
 from routers.webhooks import router as webhooks_router
+from routers.analytics import router as analytics_router
+from routers.keywords import router as keywords_router
+from routers.competitors import router as competitors_router
+from routers.notifications import router as notifications_router
+from routers.team import router as team_router
+from routers.api_keys import router as api_keys_router
+from routers.usage import router as usage_router
+from routers.change_log import router as change_log_router
 
 app.include_router(auth_router, prefix="/auth")
 app.include_router(sites_router, prefix="/sites")
@@ -78,6 +86,14 @@ app.include_router(issues_router, prefix="/issues")
 app.include_router(fixes_router, prefix="/fixes")
 app.include_router(snippet_router, prefix="/snippet")
 app.include_router(webhooks_router, prefix="/webhooks")
+app.include_router(analytics_router, prefix="/analytics")
+app.include_router(keywords_router, prefix="/keywords")
+app.include_router(competitors_router, prefix="/competitors")
+app.include_router(notifications_router, prefix="/notifications")
+app.include_router(team_router, prefix="/team")
+app.include_router(api_keys_router, prefix="/api-keys")
+app.include_router(usage_router, prefix="/usage")
+app.include_router(change_log_router, prefix="/change-log")
 
 
 # --- Health Check ---

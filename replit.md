@@ -31,35 +31,49 @@ AutoSEO is an autonomous SEO platform that crawls websites, analyzes them for SE
 
 ## Current State (April 2026)
 
+### Key Dependencies
+- `sonner` — toast notifications (installed in apps/web)
+- `@tanstack/react-query` — server state management
+- `ky` — HTTP client (exported as `api` and `apiClient` alias from `@/lib/api-client`)
+- `framer-motion` — animations
+- `recharts` — charts (AnalyticsPage)
+- SQLAlchemy note: `UsageEvent.event_metadata` maps to DB column `metadata` (reserved attribute name workaround)
+
 ### What's Built (Frontend)
 - **Landing page** (`/`) — 3D animated hero orb, feature grid, pricing cards, stats, how-it-works section, footer
 - **Login page** (`/login`) — Split panel layout, Google OAuth, email/password form
 - **Signup page** (`/signup`) — Split panel with benefits list
 - **Dashboard** (`/dashboard`) — Stat cards, SEO trend chart, activity feed, issue breakdown, onboarding CTA
-- **Sites page** (`/sites`) — Site grid, add-site modal with connection type selector
-- **Issues page** (`/issues`) — Filter bar, sortable table (ready for real data)
-- **Fixes page** (`/fixes`) — Fix list UI
-- **Settings page** (`/settings`) — User/org settings
-- **Dashboard layout** — Collapsible glass sidebar, top search bar with ⌘K, plan badge, notification bell
+- **Sites page** (`/dashboard/sites`) — Site grid, add-site modal with connection type selector
+- **Issues page** (`/dashboard/issues`) — Filter bar with severity/category/status, real API data wired via useQuery
+- **Fixes page** (`/dashboard/fixes`) — Pending/Applied/Rolled-back lists wired to real API, apply+rollback mutations
+- **Analytics page** (`/dashboard/analytics`) — Recharts line/bar charts from real API
+- **Keywords page** (`/dashboard/keywords`) — Rank tracking table with real data
+- **Competitors page** (`/dashboard/competitors`) — Competitor score cards with real data
+- **Team page** (`/dashboard/team`) — Member list, invite modal, role management
+- **API Keys page** (`/dashboard/api-keys`) — Generate + reveal-once keys
+- **Reports page** (`/dashboard/reports`) — Schedule modal, on-demand PDF placeholder
+- **Billing page** (`/dashboard/billing`) — Usage bars, plan cards, upgrade buttons
+- **Settings page** (`/dashboard/settings`) — Profile settings
+- **Dashboard layout** — Collapsible sidebar with grouped nav (Overview/SEO/Reports/Account), notification bell, theme toggle
 
-### What's Built (Backend scaffolding)
-- FastAPI app structure with routers: auth, sites, crawls, issues, fixes, snippet, webhooks
-- SQLAlchemy async models, Pydantic schemas, dependencies
-- Celery worker tasks for crawl, fix, report
-- 4-layer crawler packages: ai_engine, cms_adapters, crawler, shared
+### What's Built (Backend — 14 routers)
+- `auth` — register/login/JWT, `sites` — CRUD, `crawls` — trigger/list, `issues` — full filter+pagination
+- `fixes` — apply/rollback with change_log, `snippet` — JS collector, `webhooks` — delivery queue
+- `analytics` — score trends, `keywords` — rank tracking, `competitors` — score cards
+- `notifications` — unread badge + mark read, `team` — invite/role management, `api_keys` — CRUD
+- `usage` — plan limits + usage bars, `change_log` — append-only audit trail
+- 4-layer real crawler: jina_layer, crawl4ai_layer, scrapfly_layer, JS-snippet
+- Full SQLAlchemy async models (22 models across 14 tables)
 
-### What's NOT Built Yet (Priority Order)
-1. **Supabase connection** — env vars not set, auth is mocked, no real DB
-2. **Backend runtime** — PostgreSQL + Redis required, not running in Replit
-3. **Real crawl engine** — Crawl4AI, Camoufox, ScrapFly not integrated
-4. **AI analysis** — Anthropic API not connected
-5. **CMS integrations** — WordPress, Shopify, Webflow, GitHub app flows
-6. **Onboarding wizard** — Add site → connect CMS → first crawl flow
-7. **Real-time crawl progress** — SSE connection for live updates
-8. **PDF reports** — @react-pdf/renderer not installed
-9. **API key management UI** — Settings page placeholder
-10. **Stripe billing** — Subscription enforcement not implemented
-11. **JS snippet** — Collector endpoint + embeddable script
+### What Needs Work Next (Priority Order)
+1. **Claude AI integration** — packages/ai_engine for fix generation (ANTHROPIC_API_KEY needed)
+2. **CMS adapters** — WordPress first (packages/cms_adapters/wordpress.py)
+3. **Notification bell UI** — wire dropdown to /notifications API
+4. **Real-time crawl progress** — SSE endpoint for live crawl updates
+5. **PDF report generation** — weasyprint or similar for export
+6. **Stripe billing enforcement** — block crawls past plan limits
+7. **Fix verification** — re-crawl after CMS write to confirm fix applied
 
 ## Design System (v2 — Premium Dark)
 
