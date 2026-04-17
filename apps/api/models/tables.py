@@ -213,7 +213,7 @@ class ChangeLog(Base):
     actor_id = Column(UUID(as_uuid=True))
     old_value = Column(Text)
     new_value = Column(Text)
-    metadata = Column(JSONB)
+    extra_metadata = Column("metadata", JSONB)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
 
     __table_args__ = (

@@ -1,7 +1,9 @@
 import ky from 'ky'
 import { getAccessToken } from './supabase'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// In development, Vite proxies /api -> http://localhost:8000
+// In production (static), this should point to the deployed API
+const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
 export const api = ky.extend({
   prefixUrl: API_BASE,

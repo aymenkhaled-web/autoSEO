@@ -3,6 +3,26 @@
 ## Overview
 AutoSEO is an autonomous SEO platform that crawls websites, analyzes them for SEO issues with Claude AI, and automatically applies fixes directly to your CMS. Fully redesigned with a premium dark 3D UI/UX design system.
 
+## Replit Environment Setup (Migrated)
+
+### Running Services
+- **Frontend** — React/Vite on port 5000 (`cd apps/web && npm run dev`)
+- **Backend API** — FastAPI/Uvicorn on port 8000 (`cd apps/api && python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload`)
+- Vite dev server proxies `/api/*` → `http://localhost:8000` (no CORS issues in dev)
+
+### Database
+- **Replit PostgreSQL** provisioned and connected via `DATABASE_URL` env var
+- All tables created via SQLAlchemy `Base.metadata.create_all`
+- `config.py` auto-converts `DATABASE_URL` to asyncpg format and strips `sslmode` param
+- SSL handled via `connect_args` in the engine
+
+### Key Env Vars Required for Full Functionality
+- `DATABASE_URL` — auto-provisioned by Replit
+- `SUPABASE_URL` + `SUPABASE_ANON_KEY` — needed for frontend auth (Supabase JS client)
+- `SUPABASE_JWT_SECRET` — needed for backend JWT validation
+- `ANTHROPIC_API_KEY` — for AI analysis features
+- `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` — for billing
+
 ## Current State (April 2026)
 
 ### What's Built (Frontend)
