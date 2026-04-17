@@ -1,228 +1,160 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Bug, Filter, ChevronDown, ExternalLink, AlertTriangle,
-  XCircle, Info, CheckCircle2, Loader2, ArrowUpDown
+  Bug, Filter, ChevronDown, AlertTriangle,
+  XCircle, Info, CheckCircle2, Search, X,
 } from 'lucide-react'
 
-// Mock empty state — will be connected to API in Phase 2
+const SEVERITY_CONFIG: Record<string, { icon: any; className: string; label: string }> = {
+  critical: { icon: XCircle,       className: 'bg-red-500/10 text-red-500 border-red-500/20',    label: 'Critical' },
+  high:     { icon: AlertTriangle, className: 'bg-orange-500/10 text-orange-500 border-orange-500/20', label: 'High' },
+  medium:   { icon: AlertTriangle, className: 'bg-amber-500/10 text-amber-500 border-amber-500/20',  label: 'Medium' },
+  low:      { icon: Info,          className: 'bg-blue-500/10 text-blue-500 border-blue-500/20',    label: 'Low' },
+  info:     { icon: Info,          className: 'bg-slate-500/10 text-slate-500 border-slate-500/20', label: 'Info' },
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  meta: 'Meta Tags', headings: 'Headings', images: 'Images', links: 'Links',
+  schema: 'Schema', performance: 'Performance', social: 'Social', content: 'Content', technical: 'Technical',
+}
+
 const mockIssues: any[] = []
 
-const severityConfig: Record<string, { color: string; icon: any; label: string }> = {
-  critical: { color: 'var(--color-severity-critical)', icon: XCircle, label: 'Critical' },
-  high: { color: 'var(--color-severity-high)', icon: AlertTriangle, label: 'High' },
-  medium: { color: 'var(--color-severity-medium)', icon: AlertTriangle, label: 'Medium' },
-  low: { color: 'var(--color-severity-low)', icon: Info, label: 'Low' },
-  info: { color: 'var(--color-severity-info)', icon: Info, label: 'Info' },
-}
-
-const categoryLabels: Record<string, string> = {
-  meta: 'Meta Tags',
-  headings: 'Headings',
-  images: 'Images',
-  links: 'Links',
-  schema: 'Schema',
-  performance: 'Performance',
-  social: 'Social',
-  content: 'Content',
-  technical: 'Technical',
-}
-
 export default function IssuesPage() {
-  const [filterSeverity, setFilterSeverity] = useState<string | null>(null)
-  const [filterCategory, setFilterCategory] = useState<string | null>(null)
-  const [filterStatus, setFilterStatus] = useState<string | null>(null)
+  const [severity, setSeverity] = useState<string | null>(null)
+  const [category, setCategory] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
   const [showFilters, setShowFilters] = useState(false)
 
-  const issues = mockIssues
+  const filtered = mockIssues.filter((issue) => {
+    if (severity && issue.severity !== severity) return false
+    if (category && issue.category !== category) return false
+    if (search && !issue.title.toLowerCase().includes(search.toLowerCase())) return false
+    return true
+  })
+
+  const activeFilters = [severity, category].filter(Boolean).length
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>Issues</h1>
-          <p className="mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-            SEO issues found across your sites, sorted by impact
-          </p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Issues</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">SEO issues found across your sites, sorted by impact</p>
         </div>
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border transition-all"
-          style={{
-            borderColor: showFilters ? 'var(--color-brand)' : 'var(--color-border)',
-            color: showFilters ? 'var(--color-brand-light)' : 'var(--color-text-secondary)',
-            background: showFilters ? 'var(--color-brand-glow)' : 'transparent',
-          }}
-        >
-          <Filter className="w-4 h-4" />
+        <button onClick={() => setShowFilters(!showFilters)}
+          className={`inline-flex items-center gap-2 h-9 px-4 rounded-lg border text-sm font-medium transition-all ${showFilters || activeFilters > 0
+            ? 'border-primary/40 bg-primary/10 text-primary'
+            : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted'
+          }`}>
+          <Filter className="h-4 w-4" />
           Filters
-          <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+          {activeFilters > 0 && (
+            <span className="h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">{activeFilters}</span>
+          )}
+          <ChevronDown className={`h-3 w-3 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
         </button>
       </div>
 
-      {/* Filters Bar */}
+      {/* Filters */}
       {showFilters && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="flex flex-wrap gap-3 p-4 rounded-xl border"
-          style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
-        >
-          {/* Severity */}
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Severity</label>
-            <select
-              value={filterSeverity || ''}
-              onChange={(e) => setFilterSeverity(e.target.value || null)}
-              className="px-3 py-2 rounded-lg text-sm border outline-none"
-              style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
-            >
-              <option value="">All</option>
-              <option value="critical">Critical</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
-
-          {/* Category */}
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Category</label>
-            <select
-              value={filterCategory || ''}
-              onChange={(e) => setFilterCategory(e.target.value || null)}
-              className="px-3 py-2 rounded-lg text-sm border outline-none"
-              style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
-            >
-              <option value="">All</option>
-              {Object.entries(categoryLabels).map(([key, label]) => (
-                <option key={key} value={key}>{label}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Status */}
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Fix Status</label>
-            <select
-              value={filterStatus || ''}
-              onChange={(e) => setFilterStatus(e.target.value || null)}
-              className="px-3 py-2 rounded-lg text-sm border outline-none"
-              style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
-            >
-              <option value="">All</option>
-              <option value="pending">Pending</option>
-              <option value="auto_fixable">Auto-Fixable</option>
-              <option value="applied">Applied</option>
-              <option value="rolled_back">Rolled Back</option>
-            </select>
-          </div>
-
-          {/* Clear Filters */}
-          {(filterSeverity || filterCategory || filterStatus) && (
-            <div className="flex items-end">
-              <button
-                onClick={() => { setFilterSeverity(null); setFilterCategory(null); setFilterStatus(null) }}
-                className="px-3 py-2 rounded-lg text-sm transition-colors"
-                style={{ color: 'var(--color-brand-light)' }}
-              >
-                Clear all
-              </button>
+          className="bg-card border border-border rounded-xl p-4 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <input value={search} onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search issues…"
+                className="w-full h-9 bg-background border border-border rounded-lg pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" />
             </div>
+
+            {/* Severity */}
+            <div className="relative">
+              <select value={severity ?? ''} onChange={(e) => setSeverity(e.target.value || null)}
+                className="w-full h-9 bg-background border border-border rounded-lg px-3 pr-8 text-sm text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                <option value="">All severities</option>
+                {Object.entries(SEVERITY_CONFIG).map(([k, v]) => (
+                  <option key={k} value={k}>{v.label}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            </div>
+
+            {/* Category */}
+            <div className="relative">
+              <select value={category ?? ''} onChange={(e) => setCategory(e.target.value || null)}
+                className="w-full h-9 bg-background border border-border rounded-lg px-3 pr-8 text-sm text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                <option value="">All categories</option>
+                {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            </div>
+          </div>
+
+          {activeFilters > 0 && (
+            <button onClick={() => { setSeverity(null); setCategory(null); setSearch('') }}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+              <X className="h-3 w-3" /> Clear all filters
+            </button>
           )}
         </motion.div>
       )}
 
-      {/* Issues Table */}
-      {issues.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center justify-center py-20 rounded-xl border"
-          style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
-        >
-          <Bug className="w-16 h-16 mb-4 opacity-20" style={{ color: 'var(--color-text-muted)' }} />
-          <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>No issues found</h3>
-          <p className="text-sm max-w-md text-center" style={{ color: 'var(--color-text-muted)' }}>
-            Run a crawl on one of your sites to discover SEO issues. Issues will appear here sorted by impact score.
+      {/* Issues list */}
+      {filtered.length === 0 ? (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center justify-center py-24 bg-card border border-dashed border-border rounded-xl text-center">
+          <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center mb-4">
+            <CheckCircle2 className="h-7 w-7 text-green-500" />
+          </div>
+          <h3 className="text-base font-semibold text-foreground mb-1">
+            {mockIssues.length === 0 ? 'No issues detected yet' : 'No matching issues'}
+          </h3>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            {mockIssues.length === 0
+              ? 'Add a site and run your first crawl to start detecting SEO issues automatically.'
+              : 'Try adjusting your filters to see more results.'}
           </p>
         </motion.div>
       ) : (
-        <div className="rounded-xl border overflow-hidden" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
-          {/* Table Header */}
-          <div
-            className="grid grid-cols-12 gap-4 px-5 py-3 text-xs font-medium uppercase tracking-wider border-b"
-            style={{ color: 'var(--color-text-muted)', borderColor: 'var(--color-border)', background: 'var(--color-bg-elevated)' }}
-          >
-            <div className="col-span-1 flex items-center gap-1 cursor-pointer">
-              Severity <ArrowUpDown className="w-3 h-3" />
-            </div>
-            <div className="col-span-3">Issue</div>
-            <div className="col-span-3">Page</div>
-            <div className="col-span-2">Category</div>
-            <div className="col-span-1 flex items-center gap-1 cursor-pointer">
-              Impact <ArrowUpDown className="w-3 h-3" />
-            </div>
-            <div className="col-span-1">Status</div>
-            <div className="col-span-1">Fix</div>
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="grid grid-cols-[1fr,auto,auto,auto] gap-4 px-5 py-3 border-b border-border text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <span>Issue</span>
+            <span>Category</span>
+            <span>Severity</span>
+            <span>Actions</span>
           </div>
-
-          {/* Table Rows */}
-          {issues.map((issue: any, i: number) => {
-            const sev = severityConfig[issue.severity] || severityConfig.info
-            const SevIcon = sev.icon
-            return (
-              <motion.div
-                key={issue.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: i * 0.02 }}
-                className="grid grid-cols-12 gap-4 px-5 py-3.5 border-b items-center transition-colors cursor-pointer"
-                style={{ borderColor: 'var(--color-border)' }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-bg-elevated)')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-              >
-                <div className="col-span-1">
-                  <span className="flex items-center gap-1.5">
-                    <SevIcon className="w-4 h-4" style={{ color: sev.color }} />
-                    <span className="text-xs font-medium" style={{ color: sev.color }}>{sev.label}</span>
+          <div className="divide-y divide-border">
+            {filtered.map((issue, i) => {
+              const sev = SEVERITY_CONFIG[issue.severity] ?? SEVERITY_CONFIG.info
+              const SevIcon = sev.icon
+              return (
+                <motion.div key={issue.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                  className="grid grid-cols-[1fr,auto,auto,auto] gap-4 items-center px-5 py-4 hover:bg-muted/50 transition-colors">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <SevIcon className={`h-4 w-4 flex-shrink-0 ${sev.className.split(' ')[1]}`} />
+                      <p className="text-sm font-medium text-foreground truncate">{issue.title}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 ml-6 truncate font-mono">{issue.url}</p>
+                  </div>
+                  <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                    {CATEGORY_LABELS[issue.category] ?? issue.category}
                   </span>
-                </div>
-                <div className="col-span-3">
-                  <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>{issue.type}</p>
-                  <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--color-text-muted)' }}>{issue.current_value}</p>
-                </div>
-                <div className="col-span-3">
-                  <p className="text-sm truncate" style={{ color: 'var(--color-text-secondary)' }}>{issue.page_url || '—'}</p>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-xs px-2 py-1 rounded-full border"
-                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}>
-                    {categoryLabels[issue.category] || issue.category}
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border whitespace-nowrap ${sev.className}`}>
+                    {sev.label}
                   </span>
-                </div>
-                <div className="col-span-1">
-                  <span className="text-sm font-bold" style={{ color: 'var(--color-text-primary)' }}>{issue.impact_score}</span>
-                </div>
-                <div className="col-span-1">
-                  <span className="text-xs capitalize" style={{ color: issue.fix_status === 'applied' ? 'var(--color-accent-emerald)' : 'var(--color-text-muted)' }}>
-                    {issue.fix_status}
-                  </span>
-                </div>
-                <div className="col-span-1">
-                  {issue.fix_type === 'auto' && issue.ai_confidence > 0.7 ? (
-                    <span className="text-xs px-2 py-1 rounded-full" style={{ background: 'var(--color-brand-glow)', color: 'var(--color-brand-light)' }}>
-                      Auto-fix
-                    </span>
-                  ) : (
-                    <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Manual</span>
-                  )}
-                </div>
-              </motion.div>
-            )
-          })}
+                  <button className="text-xs font-medium text-primary hover:underline whitespace-nowrap">Fix</button>
+                </motion.div>
+              )
+            })}
+          </div>
         </div>
       )}
     </div>

@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { motion, useInView, AnimatePresence } from 'framer-motion'
+import { motion, useInView } from 'framer-motion'
+import { useTheme } from 'next-themes'
 import {
   Zap, Globe, Bug, Wrench, BarChart3, ArrowRight,
   CheckCircle2, TrendingUp, Shield, Code2, Cpu,
-  Star, Activity, Layers, ChevronRight, Sparkles,
-  Play, ArrowUpRight, Search, FileText, Bolt,
+  Star, Activity, ChevronRight, Sparkles,
+  Play, Search, Sun, Moon, Menu, X,
 } from 'lucide-react'
 
-/* ─── Animated counter ─── */
 function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
   const [n, setN] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
@@ -28,405 +28,316 @@ function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
   return <div ref={ref}>{n.toLocaleString()}{suffix}</div>
 }
 
-/* ─── 3D Hero Orb (kept, improved) ─── */
-function HeroVisual() {
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme()
   return (
-    <div className="relative w-[480px] h-[480px] flex-shrink-0 select-none" style={{ perspective: '1200px' }}>
-      {/* Deep ambient glow */}
+    <button
+      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      className="h-9 w-9 rounded-lg flex items-center justify-center border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+      aria-label="Toggle theme"
+    >
+      <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+      <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+    </button>
+  )
+}
+
+function HeroOrb() {
+  return (
+    <div className="relative w-[420px] h-[420px] flex-shrink-0 select-none" style={{ perspective: '1200px' }}>
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-72 h-72 rounded-full" style={{
-          background: 'radial-gradient(circle, rgba(99,102,241,0.2) 0%, rgba(167,139,250,0.08) 40%, transparent 70%)',
-          filter: 'blur(40px)',
+        <div className="w-64 h-64 rounded-full opacity-30" style={{
+          background: 'radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)',
+          filter: 'blur(50px)',
           animation: 'glow-pulse 4s ease-in-out infinite',
         }} />
       </div>
-
-      {/* Sphere */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-36 h-36 rounded-full" style={{
-          background: 'radial-gradient(circle at 38% 32%, #818cf8 0%, #6366f1 35%, #312e81 70%, #1e1b4b 100%)',
-          boxShadow: '0 0 0 1px rgba(99,102,241,0.4), 0 0 60px rgba(99,102,241,0.3), inset 0 -16px 32px rgba(0,0,0,0.5), inset 0 8px 16px rgba(255,255,255,0.12)',
+        <div className="w-32 h-32 rounded-full" style={{
+          background: 'radial-gradient(circle at 38% 32%, hsl(199 89% 70%) 0%, hsl(var(--primary)) 40%, hsl(217 91% 35%) 100%)',
+          boxShadow: '0 0 60px hsl(var(--primary) / 0.4), inset 0 -16px 32px rgba(0,0,0,0.3)',
         }}>
           <div className="absolute inset-0 rounded-full flex items-center justify-center">
-            <Zap className="w-12 h-12 text-white" style={{ filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.7))' }} />
+            <Zap className="w-10 h-10 text-white" style={{ filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.7))' }} />
           </div>
         </div>
       </div>
-
-      {/* Ring 1 */}
       <div className="absolute inset-0 flex items-center justify-center animate-spin-slow">
-        <div className="w-64 h-64 rounded-full border relative" style={{ borderColor: 'rgba(99,102,241,0.25)', transform: 'rotateX(68deg)' }}>
-          <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full" style={{ background: '#6366f1', boxShadow: '0 0 16px rgba(99,102,241,0.9)' }} />
+        <div className="w-56 h-56 rounded-full border border-primary/30 relative" style={{ transform: 'rotateX(68deg)' }}>
+          <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary" style={{ boxShadow: '0 0 16px hsl(var(--primary) / 0.9)' }} />
         </div>
       </div>
-
-      {/* Ring 2 */}
       <div className="absolute inset-0 flex items-center justify-center animate-spin-rev">
-        <div className="w-[360px] h-[360px] rounded-full border relative" style={{ borderColor: 'rgba(167,139,250,0.18)', transform: 'rotateX(58deg) rotateZ(28deg)' }}>
-          <div className="absolute top-1/2 -right-3 -translate-y-1/2 w-6 h-6 rounded-full" style={{ background: '#a78bfa', boxShadow: '0 0 18px rgba(167,139,250,0.9)' }} />
-          <div className="absolute -bottom-2 left-1/3 w-3.5 h-3.5 rounded-full" style={{ background: '#22d3ee', boxShadow: '0 0 12px rgba(34,211,238,0.9)' }} />
+        <div className="w-[320px] h-[320px] rounded-full border border-blue-500/20 relative" style={{ transform: 'rotateX(58deg) rotateZ(28deg)' }}>
+          <div className="absolute top-1/2 -right-3 -translate-y-1/2 w-5 h-5 rounded-full bg-blue-500" style={{ boxShadow: '0 0 16px rgba(59,130,246,0.9)' }} />
+          <div className="absolute -bottom-2 left-1/3 w-3 h-3 rounded-full bg-cyan-400" style={{ boxShadow: '0 0 12px rgba(34,211,238,0.9)' }} />
         </div>
       </div>
-
-      {/* Ring 3 (outermost) */}
-      <div className="absolute inset-0 flex items-center justify-center" style={{ animation: 'spin-slow 35s linear infinite' }}>
-        <div className="w-[430px] h-[430px] rounded-full border" style={{ borderColor: 'rgba(255,255,255,0.04)', transform: 'rotateX(72deg) rotateZ(15deg)' }} />
-      </div>
-
-      {/* Floating pills */}
       {[
-        { label: 'Meta Fixed', icon: CheckCircle2, color: '#34d399', bg: 'rgba(52,211,153,0.12)', border: 'rgba(52,211,153,0.25)', x: -200, y: -70, delay: 0 },
-        { label: 'Score +18', icon: TrendingUp, color: '#818cf8', bg: 'rgba(99,102,241,0.12)', border: 'rgba(99,102,241,0.25)', x: 175, y: -50, delay: 0.5 },
-        { label: '247 Issues', icon: Bug, color: '#f97316', bg: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.25)', x: -178, y: 95, delay: 1 },
-        { label: 'AI Fixed', icon: Cpu, color: '#22d3ee', bg: 'rgba(34,211,238,0.12)', border: 'rgba(34,211,238,0.25)', x: 162, y: 105, delay: 1.4 },
+        { label: 'Meta Fixed', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', x: -180, y: -60, delay: 0 },
+        { label: 'Score +18', icon: TrendingUp, color: 'text-primary', bg: 'bg-primary/10 border-primary/20', x: 160, y: -45, delay: 0.5 },
+        { label: '247 Issues', icon: Bug, color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20', x: -165, y: 85, delay: 1 },
+        { label: 'AI Fixed', icon: Cpu, color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20', x: 150, y: 95, delay: 1.4 },
       ].map((p) => (
         <motion.div key={p.label}
-          className="absolute flex items-center gap-2 px-3 py-1.5 rounded-xl"
-          style={{ left: '50%', top: '50%', x: p.x, y: p.y, background: p.bg, border: `1px solid ${p.border}`, backdropFilter: 'blur(12px)' }}
-          animate={{ y: [p.y, p.y - 9, p.y] }}
+          className={`absolute flex items-center gap-2 px-3 py-1.5 rounded-xl border backdrop-blur-sm ${p.bg}`}
+          style={{ left: '50%', top: '50%', x: p.x, y: p.y }}
+          animate={{ y: [p.y, p.y - 8, p.y] }}
           transition={{ duration: 3.5 + p.delay * 0.5, delay: p.delay, repeat: Infinity, ease: 'easeInOut' }}>
-          <p.icon className="w-3.5 h-3.5" style={{ color: p.color }} />
-          <span className="text-xs font-semibold" style={{ color: p.color }}>{p.label}</span>
+          <p.icon className={`w-3.5 h-3.5 ${p.color}`} />
+          <span className={`text-xs font-semibold ${p.color}`}>{p.label}</span>
         </motion.div>
       ))}
-
-      {/* Ambient dots */}
-      {Array.from({ length: 10 }).map((_, i) => {
-        const angle = (i / 10) * 360
-        const r = 195 + (i % 3) * 18
-        const x = Math.cos((angle * Math.PI) / 180) * r + 240
-        const y = Math.sin((angle * Math.PI) / 180) * r + 240
-        const colors = ['#6366f1', '#a78bfa', '#22d3ee']
-        return (
-          <div key={i} className="absolute w-1 h-1 rounded-full"
-            style={{ left: x, top: y, background: colors[i % 3], opacity: 0.35 + (i % 4) * 0.12, animation: `glow-pulse ${2.5 + i * 0.35}s ease-in-out infinite` }} />
-        )
-      })}
     </div>
   )
 }
 
-/* ─── Feature bento card ─── */
-function FeatureCard({ icon: Icon, title, description, accent, span = 1 }: {
-  icon: any; title: string; description: string; accent: string; span?: number
-}) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-60px' })
+function FeatureCard({ icon: Icon, title, description, color }: { icon: any; title: string; description: string; color: string }) {
   return (
-    <motion.div ref={ref}
-      initial={{ opacity: 0, y: 28 }} animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5 }}
-      className="card card-hover group p-8 cursor-default"
-      style={{ gridColumn: span > 1 ? `span ${span}` : undefined }}>
-
-      {/* Accent glow on hover */}
-      <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{ background: `radial-gradient(ellipse 60% 40% at 50% 0%, ${accent}09 0%, transparent 70%)` }} />
-
-      <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-5 relative"
-        style={{ background: `${accent}14`, border: `1px solid ${accent}28` }}>
-        <Icon className="w-5 h-5" style={{ color: accent }} />
+    <div className="group relative bg-card border border-border rounded-xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${color}`}>
+        <Icon className="h-5 w-5" />
       </div>
-
-      <h3 className="text-base font-semibold mb-2.5 tracking-tight" style={{ color: 'var(--text-1)' }}>{title}</h3>
-      <p className="text-sm leading-relaxed" style={{ color: 'var(--text-2)', lineHeight: '1.65' }}>{description}</p>
-
-      {/* Bottom accent line */}
-      <div className="absolute bottom-0 left-8 right-8 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-        style={{ background: `linear-gradient(90deg, transparent, ${accent}50, transparent)` }} />
-    </motion.div>
+      <h3 className="text-base font-semibold text-foreground mb-2">{title}</h3>
+      <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+    </div>
   )
 }
 
-/* ─── Pricing card ─── */
 function PricingCard({ tier, price, freq, description, features, cta, featured }: {
   tier: string; price: string; freq?: string; description: string; features: string[]; cta: string; featured?: boolean
 }) {
   return (
-    <div className="relative flex flex-col rounded-2xl"
-      style={{
-        background: featured ? 'linear-gradient(145deg, #16181d, #1c1f27)' : 'var(--bg-surface)',
-        border: featured ? '1px solid rgba(99,102,241,0.4)' : '1px solid var(--border)',
-        boxShadow: featured ? '0 0 0 1px rgba(99,102,241,0.1), 0 24px 80px rgba(99,102,241,0.08)' : 'none',
-      }}>
-
+    <div className={`relative flex flex-col rounded-2xl p-8 border ${featured
+      ? 'border-primary/50 shadow-lg shadow-primary/10 bg-card'
+      : 'border-border bg-card'
+    }`}>
       {featured && (
         <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-          <span className="badge" style={{ background: 'var(--brand)', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '4px 14px', boxShadow: '0 4px 16px rgba(99,102,241,0.5)' }}>
+          <span className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs font-bold shadow-lg shadow-cyan-500/25">
             Most Popular
           </span>
         </div>
       )}
-
-      <div className="p-8 flex-1 flex flex-col">
-        <div className="mb-6">
-          <p className="text-sm font-semibold mb-3" style={{ color: featured ? '#a5b4fc' : 'var(--text-2)' }}>{tier}</p>
-          <div className="flex items-end gap-1 mb-3">
-            <span className="text-5xl font-black tracking-tight" style={{ color: 'var(--text-1)', letterSpacing: '-0.03em' }}>{price}</span>
-            {freq && <span className="text-sm pb-2" style={{ color: 'var(--text-3)' }}>{freq}</span>}
-          </div>
-          <p className="text-sm" style={{ color: 'var(--text-2)' }}>{description}</p>
+      <div className="mb-6">
+        <p className={`text-xs font-semibold uppercase tracking-wider mb-3 ${featured ? 'text-primary' : 'text-muted-foreground'}`}>{tier}</p>
+        <div className="flex items-end gap-1 mb-2">
+          <span className="text-4xl font-bold text-foreground tracking-tight">{price}</span>
+          {freq && <span className="text-sm text-muted-foreground mb-1">{freq}</span>}
         </div>
-
-        <div className="sep-h mb-6" />
-
-        <ul className="space-y-3.5 flex-1 mb-8">
-          {features.map((f) => (
-            <li key={f} className="flex items-start gap-3">
-              <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: featured ? '#818cf8' : 'var(--accent-emerald)' }} />
-              <span className="text-sm" style={{ color: 'var(--text-2)' }}>{f}</span>
-            </li>
-          ))}
-        </ul>
-
-        <Link to="/signup"
-          className="btn btn-lg w-full justify-center"
-          style={featured
-            ? { background: 'var(--brand)', color: '#fff', boxShadow: '0 4px 20px rgba(99,102,241,0.4)' }
-            : { background: 'var(--bg-elevated)', color: 'var(--text-1)', border: '1px solid var(--border)' }}>
-          {cta}
-        </Link>
+        <p className="text-sm text-muted-foreground">{description}</p>
       </div>
+      <div className="h-px bg-border mb-6" />
+      <ul className="space-y-3 flex-1 mb-8">
+        {features.map((f) => (
+          <li key={f} className="flex items-start gap-3">
+            <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${featured ? 'text-primary' : 'text-green-500 dark:text-green-400'}`} />
+            <span className="text-sm text-muted-foreground">{f}</span>
+          </li>
+        ))}
+      </ul>
+      <Link to="/signup"
+        className={`w-full flex items-center justify-center gap-2 h-11 rounded-lg text-sm font-semibold transition-all ${featured
+          ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40'
+          : 'bg-secondary text-secondary-foreground hover:bg-muted border border-border'
+        }`}>
+        {cta} <ChevronRight className="h-4 w-4" />
+      </Link>
     </div>
   )
 }
 
-/* ─── Main ─── */
 export default function LandingPage() {
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   const features = [
-    { icon: Globe, title: '4-Layer Intelligent Crawler', accent: '#818cf8', description: 'Jina AI → Crawl4AI + Camoufox → ScrapFly fallback. Crawls any site reliably, bypasses anti-bot protection automatically. Zero configuration required.' },
-    { icon: Cpu, title: 'Claude AI Analysis', accent: '#22d3ee', description: 'Every page, every issue analyzed by Claude. Confidence scores, exact fix instructions, and business impact scoring — not generic recommendations.' },
-    { icon: Wrench, title: 'One-Click Auto-Fix', accent: '#34d399', description: 'WordPress, Shopify, Webflow, and GitHub integrations built-in. AutoSEO writes the fix directly to your CMS. You review, then approve.' },
-    { icon: Shield, title: 'Enterprise Security', accent: '#a78bfa', description: 'AES-256-GCM encrypted credentials, row-level security on every table, append-only audit logs, and full GDPR compliance from day one.' },
-    { icon: BarChart3, title: 'Score Trend Tracking', accent: '#f59e0b', description: 'Track SEO health across 30, 90, and 365 days per site. See exactly what moved the needle and generate client-ready PDF reports in seconds.' },
-    { icon: Code2, title: 'JS Snippet Monitor', accent: '#f43f5e', description: 'A 3KB embed captures real-user Core Web Vitals, live metadata snapshots, and sends instant alerts the moment something breaks.' },
+    { icon: Globe, title: '4-Layer Intelligent Crawler', color: 'bg-primary/10 text-primary', description: 'Jina AI → Crawl4AI + Camoufox → ScrapFly fallback. Crawls any site reliably, bypasses anti-bot protection automatically.' },
+    { icon: Cpu, title: 'Claude AI Analysis', color: 'bg-cyan-500/10 text-cyan-500', description: 'Every page analyzed by Claude. Confidence scores, exact fix instructions, and business impact scoring.' },
+    { icon: Wrench, title: 'One-Click Auto-Fix', color: 'bg-green-500/10 text-green-500', description: 'WordPress, Shopify, Webflow, and GitHub integrations. AutoSEO writes the fix directly to your CMS.' },
+    { icon: Shield, title: 'Enterprise Security', color: 'bg-violet-500/10 text-violet-500', description: 'AES-256-GCM encrypted credentials, row-level security, append-only audit logs, GDPR compliance.' },
+    { icon: BarChart3, title: 'Score Trend Tracking', color: 'bg-amber-500/10 text-amber-500', description: 'Track SEO health across 30, 90, 365 days. Generate client-ready PDF reports in seconds.' },
+    { icon: Code2, title: 'JS Snippet Monitor', color: 'bg-rose-500/10 text-rose-500', description: '3KB embed captures real-user Core Web Vitals, live metadata snapshots, and sends instant alerts.' },
   ]
 
   const steps = [
-    { n: '01', icon: Globe, title: 'Connect your site', body: 'Paste your URL and select your CMS. AutoSEO supports WordPress, Shopify, Webflow, and GitHub out of the box. Setup takes under 60 seconds.' },
-    { n: '02', icon: Cpu, title: 'AI finds every issue', body: 'Our 4-layer crawler maps every page. Claude AI scores each issue by impact, generates a human-readable explanation, and prepares the exact fix code.' },
-    { n: '03', icon: Bolt, title: 'Apply fixes in one click', body: 'Review AI-drafted fixes in your dashboard. With a single approval, AutoSEO pushes the change to your CMS, then re-crawls to verify it worked.' },
+    { n: '01', icon: Globe, title: 'Connect your site', body: 'Paste your URL and select your CMS. AutoSEO supports WordPress, Shopify, Webflow, and GitHub. Setup takes under 60 seconds.' },
+    { n: '02', icon: Cpu, title: 'AI finds every issue', body: 'Our 4-layer crawler maps every page. Claude AI scores each issue by impact and prepares the exact fix code.' },
+    { n: '03', icon: Zap, title: 'Apply fixes in one click', body: 'Review AI-drafted fixes in your dashboard. Approve, and AutoSEO pushes the change to your CMS, then re-crawls to verify.' },
   ]
 
   const plans = [
-    {
-      tier: 'Starter', price: 'Free', description: '1 site, full audit — no credit card required.',
-      features: ['1 site', '500 pages per crawl', 'Weekly scheduled crawls', 'Issue detection & scoring', 'Email reports'],
-      cta: 'Start for Free',
-    },
-    {
-      tier: 'Pro', price: '$49', freq: '/mo', description: 'Full AI automation for agencies and teams.', featured: true,
-      features: ['10 sites', '5,000 pages per crawl', 'Daily crawls', 'AI auto-fix (WP, Shopify, Webflow)', 'GitHub PR integration', 'PDF reports', 'Slack & email alerts'],
-      cta: 'Start Pro Trial',
-    },
-    {
-      tier: 'Agency', price: '$149', freq: '/mo', description: 'White-glove automation at scale.',
-      features: ['Unlimited sites', '50,000 pages per crawl', 'Hourly crawls', 'All CMS integrations', 'Full API access', 'Priority support', 'Custom branded reports'],
-      cta: 'Contact Sales',
-    },
+    { tier: 'Starter', price: 'Free', description: '1 site, full audit — no credit card required.', features: ['1 site', '500 pages per crawl', 'Weekly scheduled crawls', 'Issue detection & scoring', 'Email reports'], cta: 'Start for Free' },
+    { tier: 'Pro', price: '$49', freq: '/mo', description: 'Full AI automation for growing teams.', featured: true, features: ['10 sites', '5,000 pages per crawl', 'Daily crawls', 'AI auto-fix (WP, Shopify, Webflow)', 'GitHub PR integration', 'PDF reports', 'Slack & email alerts'], cta: 'Start Pro Trial' },
+    { tier: 'Agency', price: '$149', freq: '/mo', description: 'White-glove automation at scale.', features: ['Unlimited sites', '50,000 pages per crawl', 'Hourly crawls', 'All CMS integrations', 'Full API access', 'Priority support', 'Custom branded reports'], cta: 'Contact Sales' },
   ]
 
-  const logos = ['Shopify', 'WordPress', 'Webflow', 'GitHub', 'Slack', 'Notion']
-
   return (
-    <div style={{ background: 'var(--bg-root)', color: 'var(--text-1)' }}>
+    <div className="min-h-screen bg-background text-foreground">
 
-      {/* ─── Navbar ─── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 surface-glass" style={{ borderBottom: '1px solid var(--border)' }}>
-        <div className="container-xl h-16 flex items-center justify-between">
+      {/* ── Navbar ── */}
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 bg-background/80 backdrop-blur-xl border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: 'var(--brand)', boxShadow: '0 0 12px rgba(99,102,241,0.5)' }}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/25">
               <Zap className="w-4 h-4 text-white" />
             </div>
-            <span className="text-[15px] font-bold" style={{ color: 'var(--text-1)', letterSpacing: '-0.01em' }}>AutoSEO</span>
-            <span className="badge badge-brand ml-1" style={{ fontSize: '10px', padding: '2px 8px' }}>Beta</span>
+            <span className="text-sm font-bold tracking-tight text-foreground">AutoSEO</span>
+            <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold uppercase tracking-wider">Beta</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-1">
             {[['#features', 'Features'], ['#how', 'How it works'], ['#pricing', 'Pricing']].map(([href, label]) => (
-              <a key={label} href={href} className="btn btn-ghost text-sm">{label}</a>
+              <a key={label} href={href} className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors">{label}</a>
             ))}
           </div>
 
           <div className="flex items-center gap-2">
-            <Link to="/login" className="btn btn-ghost text-sm">Sign in</Link>
-            <Link to="/signup" className="btn btn-primary text-sm" style={{ padding: '8px 18px' }}>
-              Get started <ArrowRight className="w-3.5 h-3.5" />
+            <ThemeToggle />
+            <Link to="/login" className="hidden sm:flex h-9 px-4 items-center text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors">Sign in</Link>
+            <Link to="/signup" className="h-9 px-4 flex items-center gap-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25 transition-all">
+              Get started <ArrowRight className="h-3.5 w-3.5" />
             </Link>
+            <button className="md:hidden h-9 w-9 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted" onClick={() => setMobileOpen(!mobileOpen)}>
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+
+        {mobileOpen && (
+          <div className="md:hidden border-t border-border bg-background px-4 py-3 space-y-1">
+            {[['#features', 'Features'], ['#how', 'How it works'], ['#pricing', 'Pricing']].map(([href, label]) => (
+              <a key={label} href={href} onClick={() => setMobileOpen(false)} className="block px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg">{label}</a>
+            ))}
+            <Link to="/login" onClick={() => setMobileOpen(false)} className="block px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg">Sign in</Link>
+          </div>
+        )}
       </nav>
 
-      {/* ─── Hero ─── */}
-      <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
-        {/* Background grid */}
-        <div className="absolute inset-0 grid-texture opacity-80 grid-scroll" />
+      {/* ── Hero ── */}
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden pt-16">
+        <div className="absolute inset-0 hero-grid opacity-50" />
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-600/5" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
 
-        {/* Top ambient light */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at top, rgba(99,102,241,0.1) 0%, transparent 65%)', filter: 'blur(1px)' }} />
-
-        <div className="container-xl relative z-10">
-          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20 min-h-[calc(100vh-4rem)] py-20">
-
-            {/* Left — copy */}
-            <div className="flex-1 lg:max-w-[54%]">
-
-              {/* Eyebrow */}
-              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}
-                className="inline-flex items-center gap-2.5 mb-8">
-                <span className="badge badge-brand">
-                  <span className="status-dot active relative" style={{ width: 6, height: 6, background: '#34d399', borderRadius: '50%', boxShadow: '0 0 0 3px rgba(52,211,153,0.2)' }} />
-                  AI-Powered SEO Automation
-                </span>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="flex-1 lg:max-w-[55%]">
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-8">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500" style={{ boxShadow: '0 0 0 3px rgba(34,197,94,0.2)' }} />
+                <span className="text-xs font-semibold text-primary">AI-Powered SEO Automation</span>
               </motion.div>
 
-              {/* Headline */}
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.08 }}
-                className="font-black leading-[1.04] tracking-tight mb-6"
-                style={{ fontSize: 'clamp(44px, 5.5vw, 80px)', letterSpacing: '-0.035em' }}>
-                <span style={{ color: 'var(--text-1)' }}>SEO on </span>
-                <span className="text-brand-gradient">Autopilot.</span>
+              <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.08 }}
+                className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05] mb-6">
+                <span className="text-foreground">SEO on </span>
+                <span className="gradient-text">Autopilot.</span>
                 <br />
-                <span style={{ color: 'var(--text-1)' }}>You Stay </span>
-                <span style={{ color: 'var(--text-2)' }}>Focused.</span>
+                <span className="text-foreground">You Stay </span>
+                <span className="text-muted-foreground">Focused.</span>
               </motion.h1>
 
-              {/* Subheadline */}
-              <motion.p
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.16 }}
-                className="mb-10 leading-relaxed"
-                style={{ fontSize: 'clamp(16px, 1.3vw, 20px)', color: 'var(--text-2)', maxWidth: '520px' }}>
+              <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.16 }}
+                className="text-lg text-muted-foreground mb-10 max-w-lg leading-relaxed">
                 AutoSEO crawls every page with a 4-layer intelligent engine, analyzes issues with Claude AI,
                 and writes the fix directly to your CMS — with your approval.
               </motion.p>
 
-              {/* CTAs */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.24 }}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.24 }}
                 className="flex flex-col sm:flex-row gap-3 mb-12">
-                <Link to="/signup" className="btn btn-primary btn-xl group">
-                  Start for Free
-                  <ArrowRight className="w-4.5 h-4.5 group-hover:translate-x-0.5 transition-transform" />
+                <Link to="/signup" className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all text-base">
+                  Start for Free <ArrowRight className="h-4 w-4" />
                 </Link>
-                <Link to="/dashboard" className="btn btn-secondary btn-xl">
-                  <Activity className="w-4 h-4" style={{ color: 'var(--text-2)' }} />
-                  View Dashboard
+                <Link to="/dashboard" className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg border border-border bg-card text-foreground font-semibold hover:bg-muted transition-all text-base">
+                  <Activity className="h-4 w-4 text-muted-foreground" /> View Dashboard
                 </Link>
               </motion.div>
 
-              {/* Social proof */}
-              <motion.div
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.4 }}
-                className="flex items-center gap-5">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }}
+                className="flex items-center gap-4">
                 <div className="flex -space-x-2.5">
-                  {[
-                    { char: 'A', bg: '#6366f1' }, { char: 'K', bg: '#22d3ee' },
-                    { char: 'M', bg: '#34d399' }, { char: 'J', bg: '#a78bfa' },
-                    { char: 'S', bg: '#f59e0b' },
-                  ].map((u, i) => (
-                    <div key={i} className="w-9 h-9 rounded-full border-2 flex items-center justify-center text-xs font-black"
-                      style={{ background: u.bg, borderColor: 'var(--bg-root)', color: '#fff', letterSpacing: 0 }}>
-                      {u.char}
+                  {['A','K','M','J','S'].map((c, i) => (
+                    <div key={i} className="w-9 h-9 rounded-full border-2 border-background flex items-center justify-center text-xs font-bold text-white"
+                      style={{ background: ['#0ea5e9','#22d3ee','#34d399','#a78bfa','#f59e0b'][i] }}>
+                      {c}
                     </div>
                   ))}
                 </div>
                 <div>
                   <div className="flex items-center gap-0.5 mb-0.5">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className="w-3.5 h-3.5" style={{ fill: '#f59e0b', color: '#f59e0b' }} />
+                      <Star key={i} className="h-3.5 w-3.5" style={{ fill: '#f59e0b', color: '#f59e0b' }} />
                     ))}
                   </div>
-                  <p className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Loved by 847 SEO teams</p>
+                  <p className="text-xs text-muted-foreground font-medium">Loved by 847+ SEO teams</p>
                 </div>
               </motion.div>
             </div>
 
-            {/* Right — 3D visual */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.88 }} animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.9, delay: 0.1, ease: [0.34, 1.56, 0.64, 1] }}
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.1, ease: [0.34, 1.56, 0.64, 1] }}
               className="hidden lg:flex flex-shrink-0">
-              <HeroVisual />
+              <HeroOrb />
             </motion.div>
           </div>
         </div>
-
-        {/* Bottom fade */}
-        <div className="absolute bottom-0 inset-x-0 h-48 pointer-events-none"
-          style={{ background: 'linear-gradient(to bottom, transparent, var(--bg-root))' }} />
       </section>
 
-      {/* ─── Stats ─── */}
-      <section style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
-        <div className="container-xl py-16">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-0 lg:divide-x" style={{ '--tw-divide-opacity': 1, '--divide-color': 'var(--border)' } as any}>
+      {/* ── Stats ── */}
+      <section className="border-y border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               { to: 12400, suffix: '+', label: 'Issues auto-fixed' },
               { to: 847, suffix: '', label: 'Sites monitored' },
               { to: 98, suffix: '%', label: 'Fix success rate' },
               { to: 4, suffix: '', label: 'Crawler layers' },
             ].map((s, i) => (
-              <motion.div key={s.label}
-                initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
+              <motion.div key={s.label} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }} transition={{ delay: i * 0.08 }}
-                className="text-center lg:px-8">
-                <div className="text-4xl font-black mb-1.5 text-brand-gradient" style={{ letterSpacing: '-0.03em' }}>
+                className="text-center">
+                <div className="text-4xl font-bold gradient-text mb-2 tracking-tight">
                   <Counter to={s.to} suffix={s.suffix} />
                 </div>
-                <p className="text-sm" style={{ color: 'var(--text-3)' }}>{s.label}</p>
+                <p className="text-sm text-muted-foreground">{s.label}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── Logo bar ─── */}
-      <section className="py-14" style={{ borderBottom: '1px solid var(--border)' }}>
-        <div className="container-xl">
-          <p className="text-center text-xs font-semibold uppercase tracking-widest mb-8" style={{ color: 'var(--text-3)' }}>
-            Auto-fix for every major CMS
-          </p>
-          <div className="flex items-center justify-center gap-8 flex-wrap">
-            {logos.map((logo) => (
-              <span key={logo} className="text-sm font-semibold" style={{ color: 'var(--text-3)' }}>{logo}</span>
+      {/* ── Logo bar ── */}
+      <section className="py-12 border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-center text-xs font-medium uppercase tracking-wider text-muted-foreground mb-8">Auto-fix for every major CMS</p>
+          <div className="flex items-center justify-center gap-10 flex-wrap">
+            {['Shopify', 'WordPress', 'Webflow', 'GitHub', 'Slack', 'Notion'].map((logo) => (
+              <span key={logo} className="text-sm font-semibold text-muted-foreground/60">{logo}</span>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── Features ─── */}
-      <section id="features" style={{ paddingTop: '120px', paddingBottom: '120px' }}>
-        <div className="container-xl">
-
-          {/* Section header */}
+      {/* ── Features ── */}
+      <section id="features" className="py-24 md:py-32">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-16 max-w-2xl">
             <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-              className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--brand)' }}>
-              Platform
-            </motion.p>
-            <motion.h2
-              initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-              className="font-black mb-5 tracking-tight"
-              style={{ fontSize: 'clamp(32px, 3.5vw, 52px)', letterSpacing: '-0.03em', color: 'var(--text-1)', lineHeight: 1.1 }}>
+              className="text-xs font-semibold uppercase tracking-wider text-primary mb-4">Platform</motion.p>
+            <motion.h2 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="text-3xl md:text-5xl font-bold tracking-tight text-foreground mb-4">
               Autonomous SEO,<br />end to end.
             </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            <motion.p initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               transition={{ delay: 0.08 }}
-              style={{ fontSize: '17px', color: 'var(--text-2)', lineHeight: '1.65' }}>
+              className="text-lg text-muted-foreground leading-relaxed">
               From intelligent crawling to AI-crafted fixes applied directly to your CMS — AutoSEO handles the complete loop.
             </motion.p>
           </div>
-
-          {/* Feature grid — bento style */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((f, i) => (
-              <motion.div key={f.title}
-                initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
+              <motion.div key={f.title} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }} transition={{ delay: i * 0.07, duration: 0.5 }}>
                 <FeatureCard {...f} />
               </motion.div>
@@ -435,53 +346,32 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── How it works ─── */}
-      <section id="how" style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', paddingTop: '120px', paddingBottom: '120px' }}>
-        <div className="dot-texture absolute inset-0 opacity-30 pointer-events-none" />
-        <div className="container-xl relative z-10">
+      {/* ── How it works ── */}
+      <section id="how" className="py-24 md:py-32 border-y border-border bg-muted/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20 max-w-xl mx-auto">
             <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-              className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--brand)' }}>
-              How it works
-            </motion.p>
-            <motion.h2
-              initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-              className="font-black tracking-tight"
-              style={{ fontSize: 'clamp(30px, 3.5vw, 50px)', letterSpacing: '-0.03em', lineHeight: 1.1, color: 'var(--text-1)' }}>
+              className="text-xs font-semibold uppercase tracking-wider text-primary mb-4">How it works</motion.p>
+            <motion.h2 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">
               Three steps to zero SEO issues
             </motion.h2>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
-            {/* Connector line (desktop) */}
-            <div className="hidden lg:block absolute top-12 left-[calc(16.67%+24px)] right-[calc(16.67%+24px)] h-px pointer-events-none"
-              style={{ background: 'linear-gradient(90deg, var(--brand), rgba(167,139,250,0.6), var(--accent-cyan))' }} />
-
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {steps.map((s, i) => (
-              <motion.div key={s.n}
-                initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.12, duration: 0.5 }}
-                className="relative">
-
-                {/* Step number circle */}
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center relative flex-shrink-0 z-10"
-                    style={{
-                      background: 'var(--bg-surface)',
-                      border: '1px solid rgba(99,102,241,0.4)',
-                      boxShadow: '0 0 0 4px var(--bg-root), 0 0 20px rgba(99,102,241,0.2)',
-                    }}>
-                    <span className="text-sm font-black" style={{ color: 'var(--brand)' }}>{s.n}</span>
+              <motion.div key={s.n} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }} transition={{ delay: i * 0.12, duration: 0.5 }}>
+                <div className="bg-card border border-border rounded-xl p-6 h-full">
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="w-10 h-10 rounded-full border border-primary/30 flex items-center justify-center bg-primary/5 flex-shrink-0">
+                      <span className="text-sm font-bold text-primary">{s.n}</span>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <s.icon className="h-5 w-5 text-primary" />
+                    </div>
                   </div>
-                </div>
-
-                <div className="card p-7">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-                    style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.2)' }}>
-                    <s.icon className="w-5 h-5" style={{ color: '#818cf8' }} />
-                  </div>
-                  <h3 className="text-base font-semibold mb-2.5" style={{ color: 'var(--text-1)' }}>{s.title}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-2)', lineHeight: '1.65' }}>{s.body}</p>
+                  <h3 className="text-base font-semibold text-foreground mb-2">{s.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{s.body}</p>
                 </div>
               </motion.div>
             ))}
@@ -489,106 +379,79 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── Pricing ─── */}
-      <section id="pricing" style={{ paddingTop: '120px', paddingBottom: '120px' }}>
-        <div className="container-xl">
+      {/* ── Pricing ── */}
+      <section id="pricing" className="py-24 md:py-32">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16 max-w-xl mx-auto">
             <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-              className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--brand)' }}>
-              Pricing
-            </motion.p>
-            <motion.h2
-              initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-              className="font-black tracking-tight mb-4"
-              style={{ fontSize: 'clamp(30px, 3.5vw, 50px)', letterSpacing: '-0.03em', lineHeight: 1.1, color: 'var(--text-1)' }}>
+              className="text-xs font-semibold uppercase tracking-wider text-primary mb-4">Pricing</motion.p>
+            <motion.h2 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="text-3xl md:text-5xl font-bold tracking-tight text-foreground mb-4">
               Simple, transparent pricing
             </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-              transition={{ delay: 0.08 }}
-              style={{ color: 'var(--text-2)', fontSize: '17px' }}>
+            <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+              className="text-lg text-muted-foreground">
               Start free forever. Upgrade when you need automation.
             </motion.p>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {plans.map((p, i) => (
-              <motion.div key={p.tier}
-                initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
+              <motion.div key={p.tier} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
                 <PricingCard {...p} />
               </motion.div>
             ))}
           </div>
-
-          {/* Feature comparison hint */}
-          <motion.p
-            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-            className="text-center mt-10 text-sm" style={{ color: 'var(--text-3)' }}>
+          <p className="text-center mt-10 text-sm text-muted-foreground">
             All plans include SSL crawling, issue history, API access, and free onboarding.
-          </motion.p>
+          </p>
         </div>
       </section>
 
-      {/* ─── Final CTA ─── */}
-      <section style={{ borderTop: '1px solid var(--border)', paddingTop: '120px', paddingBottom: '120px', position: 'relative', overflow: 'hidden' }}>
-        {/* Ambient glow */}
-        <div className="absolute inset-x-0 top-0 pointer-events-none" style={{ height: '400px', background: 'radial-gradient(ellipse 70% 60% at 50% 0%, rgba(99,102,241,0.1) 0%, transparent 70%)', filter: 'blur(1px)' }} />
-
-        <div className="container-xl relative z-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+      {/* ── Final CTA ── */}
+      <section className="py-24 md:py-32 border-t border-border relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-600/5" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/5 rounded-full blur-3xl" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+          <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             className="max-w-2xl mx-auto">
-
-            <div className="badge badge-brand mx-auto mb-8" style={{ width: 'fit-content' }}>
-              <Sparkles className="w-3.5 h-3.5" />
-              Free forever plan available
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-8">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <span className="text-xs font-semibold text-primary">Free forever plan available</span>
             </div>
-
-            <h2 className="font-black tracking-tight mb-6"
-              style={{ fontSize: 'clamp(36px, 4.5vw, 64px)', letterSpacing: '-0.04em', lineHeight: 1.05, color: 'var(--text-1)' }}>
+            <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground mb-6">
               Ready to automate<br />your SEO?
             </h2>
-
-            <p className="mb-10 text-lg" style={{ color: 'var(--text-2)' }}>
+            <p className="text-lg text-muted-foreground mb-10">
               Join 847 teams already using AutoSEO to fix issues faster, rank higher, and reclaim their time.
             </p>
-
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/signup" className="btn btn-primary btn-xl group">
-                Start for Free Today
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              <Link to="/signup" className="inline-flex items-center justify-center gap-2 h-12 px-8 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold shadow-lg shadow-cyan-500/25 transition-all text-base">
+                Start for Free Today <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link to="/dashboard" className="btn btn-secondary btn-xl">
-                <Play className="w-4 h-4" style={{ color: 'var(--text-2)' }} />
-                See the Dashboard
+              <Link to="/dashboard" className="inline-flex items-center justify-center gap-2 h-12 px-8 rounded-lg border border-border bg-card text-foreground font-semibold hover:bg-muted transition-all text-base">
+                <Play className="h-4 w-4 text-muted-foreground" /> See the Dashboard
               </Link>
             </div>
-
-            <p className="mt-6 text-sm" style={{ color: 'var(--text-3)' }}>No credit card. 1 site free forever.</p>
+            <p className="mt-6 text-sm text-muted-foreground">No credit card. 1 site free forever.</p>
           </motion.div>
         </div>
       </section>
 
-      {/* ─── Footer ─── */}
-      <footer style={{ borderTop: '1px solid var(--border)' }}>
-        <div className="container-xl py-10">
+      {/* ── Footer ── */}
+      <footer className="border-t border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: 'var(--brand)' }}>
+              <div className="w-7 h-7 rounded-md flex items-center justify-center bg-gradient-to-br from-cyan-500 to-blue-600">
                 <Zap className="w-3.5 h-3.5 text-white" />
               </div>
-              <span className="text-sm font-semibold" style={{ color: 'var(--text-2)' }}>AutoSEO</span>
-              <span className="text-sm" style={{ color: 'var(--text-3)' }}>© 2026</span>
+              <span className="text-sm font-semibold text-foreground">AutoSEO</span>
+              <span className="text-sm text-muted-foreground">© 2026</span>
             </div>
             <div className="flex items-center gap-6">
-              {[['#', 'Privacy'], ['#', 'Terms'], ['#', 'Docs'], ['#', 'Status']].map(([href, label]) => (
-                <a key={label} href={href} className="text-sm transition-colors"
-                  style={{ color: 'var(--text-3)' }}
-                  onMouseEnter={(e) => ((e.target as HTMLElement).style.color = 'var(--text-2)')}
-                  onMouseLeave={(e) => ((e.target as HTMLElement).style.color = 'var(--text-3)')}>
-                  {label}
-                </a>
+              {['Privacy', 'Terms', 'Docs', 'Status'].map((label) => (
+                <a key={label} href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{label}</a>
               ))}
             </div>
           </div>

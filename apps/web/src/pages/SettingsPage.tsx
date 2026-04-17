@@ -2,21 +2,52 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   User, Building2, CreditCard, Key, Bell, Shield,
-  Copy, Check, ExternalLink, RefreshCw
+  Copy, Check, ExternalLink, ChevronDown,
 } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
+
+const TABS = [
+  { id: 'profile',       label: 'Profile',       icon: User },
+  { id: 'organization',  label: 'Organization',  icon: Building2 },
+  { id: 'billing',       label: 'Billing',        icon: CreditCard },
+  { id: 'api-keys',      label: 'API Keys',       icon: Key },
+  { id: 'notifications', label: 'Notifications',  icon: Bell },
+  { id: 'security',      label: 'Security',       icon: Shield },
+]
+
+const NOTIFICATIONS = [
+  { key: 'crawl',    label: 'Crawl completed',       desc: 'When a site crawl finishes',              def: true  },
+  { key: 'critical', label: 'Critical issues found', desc: 'When critical SEO issues are detected',   def: true  },
+  { key: 'fix',      label: 'Fix applied',           desc: 'When an AI fix is applied to your site',  def: true  },
+  { key: 'digest',   label: 'Weekly digest',         desc: 'Weekly summary of SEO performance',       def: false },
+]
+
+function Toggle({ defaultChecked }: { defaultChecked: boolean }) {
+  const [on, setOn] = useState(defaultChecked)
+  return (
+    <button onClick={() => setOn(!on)} role="switch" aria-checked={on}
+      className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ${on ? 'bg-primary' : 'bg-border'}`}>
+      <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform ${on ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
+    </button>
+  )
+}
+
+function InputField({ label, type = 'text', placeholder, value, disabled }: {
+  label: string; type?: string; placeholder?: string; value?: string; disabled?: boolean
+}) {
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium text-foreground">{label}</label>
+      <input type={type} placeholder={placeholder} defaultValue={value} disabled={disabled}
+        className="w-full h-10 bg-background border border-border rounded-lg px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed" />
+    </div>
+  )
+}
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('profile')
+  const [tab, setTab] = useState('profile')
   const [copied, setCopied] = useState(false)
-
-  const tabs = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'organization', label: 'Organization', icon: Building2 },
-    { id: 'billing', label: 'Billing', icon: CreditCard },
-    { id: 'api-keys', label: 'API Keys', icon: Key },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'security', label: 'Security', icon: Shield },
-  ]
+  const { user } = useAuth()
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
@@ -27,179 +58,157 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>Settings</h1>
-        <p className="mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-          Manage your account, organization, and integrations
-        </p>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Settings</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Manage your account, organization, and integrations</p>
       </div>
 
-      <div className="flex gap-6">
-        {/* Sidebar Tabs */}
-        <div className="w-56 flex-shrink-0 space-y-1">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-all text-left"
-              style={{
-                background: activeTab === tab.id ? 'var(--color-brand-glow)' : 'transparent',
-                color: activeTab === tab.id ? 'var(--color-brand-light)' : 'var(--color-text-secondary)',
-                border: activeTab === tab.id ? '1px solid rgba(99, 102, 241, 0.2)' : '1px solid transparent',
-              }}
-            >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          ))}
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Sidebar */}
+        <div className="lg:w-52 flex-shrink-0">
+          <nav className="flex flex-row lg:flex-col gap-1 overflow-x-auto pb-2 lg:pb-0">
+            {TABS.map((t) => (
+              <button key={t.id} onClick={() => setTab(t.id)}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all text-left w-full ${
+                  tab === t.id
+                    ? 'bg-primary/10 text-primary border border-primary/20'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent'
+                }`}>
+                <t.icon className="h-4 w-4 flex-shrink-0" />
+                {t.label}
+              </button>
+            ))}
+          </nav>
         </div>
 
-        {/* Content */}
-        <div className="flex-1">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            {activeTab === 'profile' && (
-              <div className="rounded-xl p-6 border space-y-6"
-                style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
-                <h2 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>Profile Settings</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>Full Name</label>
-                    <input type="text" placeholder="John Smith" defaultValue=""
-                      className="w-full px-4 py-2.5 rounded-lg text-sm border outline-none"
-                      style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>Email</label>
-                    <input type="email" placeholder="you@company.com" defaultValue="" disabled
-                      className="w-full px-4 py-2.5 rounded-lg text-sm border outline-none opacity-60"
-                      style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }} />
-                  </div>
+        {/* Content panel */}
+        <div className="flex-1 min-w-0">
+          <motion.div key={tab} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.15 }}>
+
+            {tab === 'profile' && (
+              <div className="bg-card border border-border rounded-xl p-6 space-y-5">
+                <h2 className="text-base font-semibold text-foreground">Profile Settings</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <InputField label="Full Name" placeholder="Jane Smith" />
+                  <InputField label="Email" type="email" placeholder="you@company.com" value={user?.email} disabled />
                 </div>
-                <button className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white"
-                  style={{ background: 'var(--color-brand)' }}>
+                <div>
+                  <InputField label="Job Title" placeholder="SEO Manager" />
+                </div>
+                <button className="h-9 px-5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white text-sm font-semibold shadow-lg shadow-cyan-500/25 transition-all">
                   Save Changes
                 </button>
               </div>
             )}
 
-            {activeTab === 'organization' && (
-              <div className="rounded-xl p-6 border space-y-6"
-                style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
-                <h2 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>Organization</h2>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>Organization Name</label>
-                  <input type="text" placeholder="Acme Inc." defaultValue=""
-                    className="w-full max-w-md px-4 py-2.5 rounded-lg text-sm border outline-none"
-                    style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }} />
+            {tab === 'organization' && (
+              <div className="bg-card border border-border rounded-xl p-6 space-y-5">
+                <h2 className="text-base font-semibold text-foreground">Organization</h2>
+                <div className="max-w-md">
+                  <InputField label="Organization Name" placeholder="Acme Inc." />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>Current Plan</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Current Plan</label>
                   <div className="flex items-center gap-3">
-                    <span className="px-3 py-1.5 rounded-lg text-sm font-semibold"
-                      style={{ background: 'var(--color-brand-glow)', color: 'var(--color-brand-light)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
                       Starter (Free)
                     </span>
-                    <button className="text-sm font-medium flex items-center gap-1"
-                      style={{ color: 'var(--color-brand-light)' }}>
-                      Upgrade <ExternalLink className="w-3 h-3" />
-                    </button>
+                    <a href="#" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
+                      Upgrade <ExternalLink className="h-3 w-3" />
+                    </a>
                   </div>
                 </div>
-                <button className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white"
-                  style={{ background: 'var(--color-brand)' }}>
+                <button className="h-9 px-5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white text-sm font-semibold shadow-lg shadow-cyan-500/25 transition-all">
                   Save Changes
                 </button>
               </div>
             )}
 
-            {activeTab === 'billing' && (
-              <div className="rounded-xl p-6 border space-y-6"
-                style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
-                <h2 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>Billing & Subscription</h2>
-                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                  Manage your subscription and payment methods via Stripe.
+            {tab === 'billing' && (
+              <div className="bg-card border border-border rounded-xl p-6 space-y-5">
+                <h2 className="text-base font-semibold text-foreground">Billing & Subscription</h2>
+                <div className="bg-muted/50 border border-border rounded-lg p-4 space-y-1">
+                  <p className="text-sm font-medium text-foreground">Starter Plan</p>
+                  <p className="text-xs text-muted-foreground">Free forever — no credit card required</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Manage your subscription and payment methods via our secure billing portal.
                 </p>
-                <button className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white flex items-center gap-2"
-                  style={{ background: 'var(--color-brand)' }}>
-                  <CreditCard className="w-4 h-4" /> Open Billing Portal
+                <button className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white text-sm font-semibold shadow-lg shadow-cyan-500/25 transition-all">
+                  <CreditCard className="h-4 w-4" /> Open Billing Portal
                 </button>
               </div>
             )}
 
-            {activeTab === 'api-keys' && (
-              <div className="rounded-xl p-6 border space-y-6"
-                style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
+            {tab === 'api-keys' && (
+              <div className="bg-card border border-border rounded-xl p-6 space-y-5">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>API Keys</h2>
-                  <button className="px-4 py-2 rounded-lg text-sm font-medium text-white"
-                    style={{ background: 'var(--color-brand)' }}>
-                    Generate New Key
+                  <h2 className="text-base font-semibold text-foreground">API Keys</h2>
+                  <button className="h-9 px-4 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white text-sm font-semibold shadow-lg shadow-cyan-500/25 transition-all">
+                    Generate Key
                   </button>
                 </div>
-                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="text-sm text-muted-foreground">
                   API keys allow programmatic access to AutoSEO. Available on Pro and Agency plans.
                 </p>
-                <div className="flex flex-col items-center justify-center py-10" style={{ color: 'var(--color-text-muted)' }}>
-                  <Key className="w-10 h-10 mb-3 opacity-30" />
-                  <p className="text-sm">No API keys created yet</p>
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-3">
+                    <Key className="h-5 w-5 text-muted-foreground/50" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground">No API keys yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">Generate your first key to get started</p>
                 </div>
               </div>
             )}
 
-            {activeTab === 'notifications' && (
-              <div className="rounded-xl p-6 border space-y-6"
-                style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
-                <h2 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>Notification Preferences</h2>
-                {[
-                  { label: 'Crawl completed', description: 'When a site crawl finishes', checked: true },
-                  { label: 'Critical issues found', description: 'When critical SEO issues are detected', checked: true },
-                  { label: 'Fix applied', description: 'When an AI fix is applied to your site', checked: true },
-                  { label: 'Weekly digest', description: 'Weekly summary of SEO performance', checked: false },
-                ].map((pref) => (
-                  <div key={pref.label} className="flex items-center justify-between py-3 border-b" style={{ borderColor: 'var(--color-border)' }}>
+            {tab === 'notifications' && (
+              <div className="bg-card border border-border rounded-xl p-6 space-y-1">
+                <h2 className="text-base font-semibold text-foreground mb-4">Notification Preferences</h2>
+                {NOTIFICATIONS.map((pref) => (
+                  <div key={pref.key} className="flex items-center justify-between py-3.5 border-b border-border last:border-0">
                     <div>
-                      <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{pref.label}</p>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{pref.description}</p>
+                      <p className="text-sm font-medium text-foreground">{pref.label}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{pref.desc}</p>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" defaultChecked={pref.checked} className="sr-only peer" />
-                      <div className="w-9 h-5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:rounded-full after:h-4 after:w-4 after:transition-all"
-                        style={{
-                          background: pref.checked ? 'var(--color-brand)' : 'var(--color-border)',
-                          ...({ '--tw-ring-color': 'var(--color-brand)' } as any),
-                        }}>
-                        <div className="absolute top-[2px] left-[2px] w-4 h-4 rounded-full transition-transform"
-                          style={{ background: 'white', transform: pref.checked ? 'translateX(16px)' : 'translateX(0)' }} />
-                      </div>
-                    </label>
+                    <Toggle defaultChecked={pref.def} />
                   </div>
                 ))}
               </div>
             )}
 
-            {activeTab === 'security' && (
-              <div className="rounded-xl p-6 border space-y-6"
-                style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
-                <h2 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>Security</h2>
-                <div>
-                  <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>Two-Factor Authentication</h3>
-                  <p className="text-sm mb-3" style={{ color: 'var(--color-text-muted)' }}>
-                    Add an extra layer of security to your account.
-                  </p>
-                  <button className="px-4 py-2 rounded-lg text-sm font-medium border"
-                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
+            {tab === 'security' && (
+              <div className="bg-card border border-border rounded-xl p-6 space-y-6">
+                <h2 className="text-base font-semibold text-foreground">Security</h2>
+
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium text-foreground">Two-Factor Authentication</h3>
+                  <p className="text-sm text-muted-foreground">Add an extra layer of security to your account with 2FA.</p>
+                  <button className="h-9 px-4 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
                     Enable 2FA
                   </button>
                 </div>
-                <div className="pt-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
-                  <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>Active Sessions</h3>
-                  <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                    You are currently signed in on this device.
-                  </p>
+
+                <div className="h-px bg-border" />
+
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium text-foreground">Active Sessions</h3>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border">
+                    <div>
+                      <p className="text-sm text-foreground font-medium">Current session</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">This device · Active now</p>
+                    </div>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 border border-green-500/20">Active</span>
+                  </div>
+                </div>
+
+                <div className="h-px bg-border" />
+
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium text-red-500">Danger Zone</h3>
+                  <p className="text-sm text-muted-foreground">Permanently delete your account and all associated data.</p>
+                  <button className="h-9 px-4 rounded-lg border border-red-500/30 text-sm font-medium text-red-500 hover:bg-red-500/5 transition-colors">
+                    Delete Account
+                  </button>
                 </div>
               </div>
             )}

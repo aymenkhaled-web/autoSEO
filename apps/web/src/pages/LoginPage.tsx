@@ -1,8 +1,23 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router'
 import { motion } from 'framer-motion'
-import { Zap, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react'
+import { Zap, Mail, Lock, ArrowRight, Eye, EyeOff, Sun, Moon } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import { useAuth } from '@/hooks/use-auth'
+
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme()
+  return (
+    <button
+      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      className="h-9 w-9 rounded-lg flex items-center justify-center border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-all relative"
+      aria-label="Toggle theme"
+    >
+      <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+      <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+    </button>
+  )
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -28,90 +43,72 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--bg-root)' }}>
+    <div className="min-h-screen flex bg-background">
+      {/* Left — branding panel */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-cyan-950 to-slate-900 relative overflow-hidden flex-col justify-between p-12">
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 30% 50%, rgba(6,182,212,0.15), transparent)' }} />
+        <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl" />
 
-      {/* Left — brand panel */}
-      <div className="hidden lg:flex w-[420px] flex-shrink-0 flex-col justify-between p-12 relative overflow-hidden"
-        style={{ background: 'var(--bg-surface)', borderRight: '1px solid var(--border)' }}>
-
-        <div className="absolute inset-0 dot-texture opacity-40 pointer-events-none" />
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 100%, rgba(99,102,241,0.12) 0%, transparent 70%)' }} />
-
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 relative z-10">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: 'var(--brand)', boxShadow: '0 0 16px rgba(99,102,241,0.5)' }}>
-            <Zap className="w-4 h-4 text-white" />
-          </div>
-          <span className="text-sm font-bold" style={{ color: 'var(--text-1)', letterSpacing: '-0.01em' }}>AutoSEO</span>
-        </Link>
-
-        {/* Center content */}
         <div className="relative z-10">
-          <p className="text-2xl font-black mb-3 tracking-tight" style={{ color: 'var(--text-1)', letterSpacing: '-0.03em', lineHeight: 1.2 }}>
-            Your SEO on<br />
-            <span style={{ color: '#a5b4fc' }}>autopilot.</span>
-          </p>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-2)' }}>
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/30">
+              <Zap className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-base font-bold text-white tracking-tight">AutoSEO</span>
+          </Link>
+        </div>
+
+        <div className="relative z-10">
+          <h2 className="text-4xl font-bold text-white mb-4 tracking-tight leading-tight">
+            Welcome back.<br />
+            <span className="text-cyan-400">Your SEO never sleeps.</span>
+          </h2>
+          <p className="text-white/60 text-base leading-relaxed">
             AutoSEO crawls, analyzes, and fixes your site automatically while you focus on what matters.
           </p>
         </div>
 
-        {/* Bottom stats */}
         <div className="grid grid-cols-3 gap-3 relative z-10">
-          {[
-            { v: '847', l: 'Sites' },
-            { v: '98%', l: 'Fix Rate' },
-            { v: '12K+', l: 'Fixed' },
-          ].map((s) => (
-            <div key={s.l} className="rounded-xl p-3 text-center" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-              <p className="text-base font-black" style={{ color: 'var(--text-1)', letterSpacing: '-0.02em' }}>{s.v}</p>
-              <p className="text-xs" style={{ color: 'var(--text-3)' }}>{s.l}</p>
+          {[{ v: '847', l: 'Sites' }, { v: '98%', l: 'Fix Rate' }, { v: '12K+', l: 'Fixed' }].map((s) => (
+            <div key={s.l} className="rounded-xl p-3 text-center bg-white/5 border border-white/10 backdrop-blur-sm">
+              <p className="text-base font-bold text-white">{s.v}</p>
+              <p className="text-xs text-white/40 mt-0.5">{s.l}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Right — form */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 relative">
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 50% 40% at 50% 0%, rgba(99,102,241,0.06) 0%, transparent 70%)' }} />
+      {/* Right — form panel */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-background relative">
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
+        </div>
 
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="w-full max-w-[360px] relative z-10">
+          className="w-full max-w-md space-y-6">
 
-          {/* Mobile logo */}
-          <Link to="/" className="flex lg:hidden items-center gap-2 mb-8">
-            <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: 'var(--brand)' }}>
-              <Zap className="w-3.5 h-3.5 text-white" />
+          <Link to="/" className="flex lg:hidden items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-br from-cyan-500 to-blue-600">
+              <Zap className="w-4 h-4 text-white" />
             </div>
-            <span className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>AutoSEO</span>
+            <span className="text-sm font-bold text-foreground">AutoSEO</span>
           </Link>
 
-          <h1 className="text-2xl font-black mb-1 tracking-tight" style={{ color: 'var(--text-1)', letterSpacing: '-0.03em' }}>
-            Welcome back
-          </h1>
-          <p className="text-sm mb-7" style={{ color: 'var(--text-2)' }}>
-            Sign in to your account
-          </p>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground mb-1">Welcome back</h1>
+            <p className="text-sm text-muted-foreground">Sign in to your account to continue</p>
+          </div>
 
-          {/* Error */}
           {error && (
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-              className="mb-5 px-4 py-3 rounded-xl text-sm border"
-              style={{ background: 'rgba(244,63,94,0.08)', borderColor: 'rgba(244,63,94,0.2)', color: '#fb7185' }}>
+              className="px-4 py-3 rounded-lg text-sm bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400">
               {error}
             </motion.div>
           )}
 
-          {/* Google OAuth */}
           <button onClick={signInWithGoogle}
-            className="w-full py-2.5 px-4 rounded-xl text-sm font-medium border flex items-center justify-center gap-3 mb-5 transition-all duration-150"
-            style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-1)' }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.background = 'var(--bg-elevated)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-surface)' }}>
+            className="w-full h-11 px-4 rounded-lg text-sm font-medium border border-border bg-card text-foreground flex items-center justify-center gap-3 hover:bg-muted transition-colors">
             <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
               <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -121,61 +118,56 @@ export default function LoginPage() {
             Continue with Google
           </button>
 
-          <div className="flex items-center gap-3 mb-5">
-            <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-            <span className="text-xs" style={{ color: 'var(--text-3)' }}>or</span>
-            <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <div className="flex-1 h-px bg-border" />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-3.5">
-            {/* Email */}
-            <div>
-              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-2)' }}>Email</label>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium text-foreground">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <input
+                  id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com" required autoComplete="email"
-                  className="input input-icon" />
+                  className="w-full h-11 bg-background border border-border rounded-lg pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                />
               </div>
             </div>
 
-            {/* Password */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>Password</label>
-                <a href="#" className="text-xs transition-colors" style={{ color: 'var(--text-3)' }}
-                  onMouseEnter={(e) => ((e.target as HTMLElement).style.color = 'var(--text-2)')}
-                  onMouseLeave={(e) => ((e.target as HTMLElement).style.color = 'var(--text-3)')}>
-                  Forgot?
-                </a>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="text-sm font-medium text-foreground">Password</label>
+                <a href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors">Forgot password?</a>
               </div>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
-                <input type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <input
+                  id="password" type={showPw ? 'text' : 'password'} value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••" required autoComplete="current-password"
-                  className="input input-icon pr-10" />
+                  className="w-full h-11 bg-background border border-border rounded-lg pl-10 pr-11 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                />
                 <button type="button" onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded transition-colors"
-                  style={{ color: 'var(--text-3)' }}>
-                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground hover:text-foreground transition-colors">
+                  {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
 
             <button type="submit" disabled={loading}
-              className="btn btn-primary w-full justify-center"
-              style={{ padding: '11px 20px', fontSize: '14px', marginTop: '4px', opacity: loading ? 0.7 : 1 }}>
+              className="w-full h-11 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
               {loading ? (
                 <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-              ) : <>Sign In <ArrowRight className="w-4 h-4" /></>}
+              ) : <>Sign In <ArrowRight className="h-4 w-4" /></>}
             </button>
           </form>
 
-          <p className="text-center text-sm mt-6" style={{ color: 'var(--text-3)' }}>
+          <p className="text-center text-sm text-muted-foreground">
             No account?{' '}
-            <Link to="/signup" className="font-semibold transition-colors" style={{ color: '#a5b4fc' }}>
-              Sign up free
-            </Link>
+            <Link to="/signup" className="font-semibold text-primary hover:underline">Sign up free</Link>
           </p>
         </motion.div>
       </div>

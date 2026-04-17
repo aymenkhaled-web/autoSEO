@@ -3,220 +3,210 @@ import { motion } from 'framer-motion'
 import { Link } from 'react-router'
 import {
   Globe, Bug, Wrench, TrendingUp, ArrowUpRight,
-  BarChart3, Clock, CheckCircle2, AlertTriangle, XCircle,
-  ArrowRight, Sparkles, Activity, Zap, Plus
+  Zap, Play, Clock, CheckCircle2, AlertTriangle,
+  XCircle, Loader2, ChevronRight, Sparkles,
 } from 'lucide-react'
+import { useSites, useCrawls } from '@/hooks/use-data'
+import { formatRelativeTime } from '@/lib/utils'
 
-const stats = [
-  { label: 'Sites Monitored', value: '0', icon: Globe,     color: '#818cf8', href: '/sites' },
-  { label: 'Issues Found',    value: '0', icon: Bug,       color: '#f97316', href: '/issues' },
-  { label: 'Fixes Applied',   value: '0', icon: Wrench,    color: '#34d399', href: '/fixes' },
-  { label: 'Avg SEO Score',   value: '—', icon: TrendingUp,color: '#22d3ee', href: '/reports' },
-]
-
-const severities = [
-  { label: 'Critical', count: 0, color: '#ef4444', icon: XCircle },
-  { label: 'High',     count: 0, color: '#f97316', icon: AlertTriangle },
-  { label: 'Medium',   count: 0, color: '#eab308', icon: AlertTriangle },
-  { label: 'Low',      count: 0, color: '#22c55e', icon: CheckCircle2 },
-]
-
-function StatCard({ stat, index }: { stat: typeof stats[0]; index: number }) {
-  return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: index * 0.07 }}>
-      <Link to={stat.href} className="block group">
-        <div className="stat-card transition-all duration-200 group-hover:border-white/[0.12]"
-          style={{ cursor: 'pointer' }}>
-          <div className="flex items-start justify-between mb-5">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: `${stat.color}16`, border: `1px solid ${stat.color}28` }}>
-              <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
-            </div>
-            <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-              style={{ color: 'var(--text-3)' }} />
-          </div>
-          <p className="text-3xl font-black tracking-tight mb-1" style={{ color: 'var(--text-1)', letterSpacing: '-0.03em' }}>
-            {stat.value}
-          </p>
-          <p className="text-sm" style={{ color: 'var(--text-2)' }}>{stat.label}</p>
+function StatCard({ icon: Icon, label, value, sub, color, href }: {
+  icon: any; label: string; value: string | number; sub?: string; color: string; href?: string
+}) {
+  const card = (
+    <div className="bg-card border border-border rounded-xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group">
+      <div className="flex items-start justify-between mb-4">
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color}`}>
+          <Icon className="h-5 w-5" />
         </div>
-      </Link>
-    </motion.div>
+        {href && <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />}
+      </div>
+      <p className="text-2xl font-bold text-foreground tracking-tight mb-0.5">{value}</p>
+      <p className="text-sm font-medium text-foreground">{label}</p>
+      {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
+    </div>
+  )
+  return href ? <Link to={href}>{card}</Link> : card
+}
+
+function SeverityBadge({ severity }: { severity: string }) {
+  const cfg: Record<string, { label: string; className: string }> = {
+    critical: { label: 'Critical', className: 'bg-red-500/10 text-red-500 border-red-500/20' },
+    high:     { label: 'High',     className: 'bg-orange-500/10 text-orange-500 border-orange-500/20' },
+    medium:   { label: 'Medium',   className: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
+    low:      { label: 'Low',      className: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
+    info:     { label: 'Info',     className: 'bg-slate-500/10 text-slate-500 border-slate-500/20' },
+  }
+  const c = cfg[severity] ?? cfg.info
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${c.className}`}>
+      {c.label}
+    </span>
   )
 }
 
+function CrawlStatusIcon({ status }: { status: string }) {
+  if (status === 'completed') return <CheckCircle2 className="h-4 w-4 text-green-500" />
+  if (status === 'running') return <Loader2 className="h-4 w-4 text-primary animate-spin" />
+  if (status === 'failed') return <XCircle className="h-4 w-4 text-red-500" />
+  return <Clock className="h-4 w-4 text-muted-foreground" />
+}
+
+const mockRecentIssues = [
+  { id: '1', title: 'Missing meta description', url: '/blog/seo-tips', severity: 'high', category: 'meta' },
+  { id: '2', title: 'Duplicate H1 tags', url: '/products/widget', severity: 'medium', category: 'headings' },
+  { id: '3', title: 'Images missing alt text (23)', url: '/gallery', severity: 'high', category: 'images' },
+  { id: '4', title: 'Broken canonical link', url: '/landing/offer', severity: 'critical', category: 'technical' },
+  { id: '5', title: 'Title tag too long (68 chars)', url: '/about', severity: 'low', category: 'meta' },
+]
+
 export default function DashboardPage() {
-  const [activePeriod, setActivePeriod] = useState('30d')
-  const periods = ['30d', '90d', '1y']
+  const { data: sitesData, isLoading: sitesLoading } = useSites()
+  const { data: crawlsData, isLoading: crawlsLoading } = useCrawls()
+
+  const sites = sitesData?.sites ?? []
+  const crawls = crawlsData?.crawls ?? []
+
+  const stats = [
+    { icon: Globe, label: 'Sites Monitored', value: sites.length || 0, sub: 'Connected sites', color: 'bg-primary/10 text-primary', href: '/dashboard/sites' },
+    { icon: Bug, label: 'Open Issues', value: 0, sub: 'Across all sites', color: 'bg-orange-500/10 text-orange-500', href: '/dashboard/issues' },
+    { icon: Wrench, label: 'Fixes Applied', value: 0, sub: 'Total auto-fixes', color: 'bg-green-500/10 text-green-500', href: '/dashboard/fixes' },
+    { icon: TrendingUp, label: 'Avg SEO Score', value: '—', sub: 'Needs crawl', color: 'bg-violet-500/10 text-violet-500' },
+  ]
 
   return (
-    <div className="space-y-5">
-
+    <div className="space-y-6">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-        className="flex items-center justify-between pt-1">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-1)', letterSpacing: '-0.02em' }}>Dashboard</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>Your SEO command center</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Welcome back — here's what's happening across your sites.</p>
         </div>
-        <Link to="/sites" className="btn btn-primary" style={{ gap: '6px', padding: '8px 16px', fontSize: '13px' }}>
-          <Plus className="w-3.5 h-3.5" />
-          Add Site
+        <Link to="/dashboard/sites"
+          className="hidden sm:inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white text-sm font-semibold shadow-lg shadow-cyan-500/25 transition-all">
+          <Zap className="h-4 w-4" /> Add Site
         </Link>
-      </motion.div>
-
-      {/* Stats row */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
-        {stats.map((s, i) => <StatCard key={s.label} stat={s} index={i} />)}
       </div>
 
-      {/* Main content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+      {/* Stats grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((s, i) => (
+          <motion.div key={s.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.07 }}>
+            <StatCard {...s} />
+          </motion.div>
+        ))}
+      </div>
 
-        {/* Score chart */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.3 }}
-          className="lg:col-span-2 card">
-
-          <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: 'rgba(129,140,248,0.12)', border: '1px solid rgba(129,140,248,0.2)' }}>
-                <Activity className="w-3.5 h-3.5" style={{ color: '#818cf8' }} />
-              </div>
-              <div>
-                <h2 className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>SEO Score Trend</h2>
-                <p className="text-xs" style={{ color: 'var(--text-3)' }}>Score history over time</p>
-              </div>
+      {/* Main content grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent activity — wide */}
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+          className="lg:col-span-2">
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <h2 className="text-sm font-semibold text-foreground">Recent Issues</h2>
+              <Link to="/dashboard/issues" className="text-xs text-primary hover:underline font-medium flex items-center gap-1">
+                View all <ArrowUpRight className="h-3 w-3" />
+              </Link>
             </div>
-            <div className="flex gap-0.5 p-0.5 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-              {periods.map((p) => (
-                <button key={p} onClick={() => setActivePeriod(p)}
-                  className="px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-100"
-                  style={activePeriod === p
-                    ? { background: 'var(--bg-overlay)', color: 'var(--text-1)' }
-                    : { color: 'var(--text-3)' }}>
-                  {p}
-                </button>
+            <div className="divide-y divide-border">
+              {mockRecentIssues.map((issue) => (
+                <div key={issue.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/50 transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{issue.title}</p>
+                    <p className="text-xs text-muted-foreground truncate mt-0.5 font-mono">{issue.url}</p>
+                  </div>
+                  <SeverityBadge severity={issue.severity} />
+                </div>
               ))}
+              {mockRecentIssues.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <CheckCircle2 className="h-10 w-10 text-green-500/50 mb-3" />
+                  <p className="text-sm font-medium text-foreground">No issues found</p>
+                  <p className="text-xs text-muted-foreground mt-1">Add a site and run a crawl to start</p>
+                </div>
+              )}
             </div>
           </div>
+        </motion.div>
 
-          <div className="flex flex-col items-center justify-center py-16 px-6">
-            <svg viewBox="0 0 320 100" fill="none" className="w-64 h-20 mb-5 opacity-30">
-              <defs>
-                <linearGradient id="cg" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#6366f1" stopOpacity="0.5"/>
-                  <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.2"/>
-                </linearGradient>
-              </defs>
-              {[25, 50, 75].map((y) => (
-                <line key={y} x1="0" y1={y} x2="320" y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>
-              ))}
-              <path d="M0 85 Q60 75 90 78 Q140 84 180 62 Q230 42 270 48 L320 45 L320 100 L0 100 Z" fill="url(#cg)" />
-              <path d="M0 85 Q60 75 90 78 Q140 84 180 62 Q230 42 270 48 L320 45"
-                stroke="rgba(99,102,241,0.5)" strokeWidth="1.5" fill="none" strokeDasharray="5 4"/>
-            </svg>
-            <p className="text-sm font-semibold mb-1.5" style={{ color: 'var(--text-1)' }}>No data yet</p>
-            <p className="text-xs text-center" style={{ color: 'var(--text-3)', maxWidth: 260 }}>
-              Add a site and run your first crawl to see SEO score trends over time
+        {/* Right column */}
+        <div className="space-y-6">
+          {/* Recent crawls */}
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+                <h2 className="text-sm font-semibold text-foreground">Recent Crawls</h2>
+                <Link to="/dashboard/sites" className="text-xs text-primary hover:underline font-medium flex items-center gap-1">
+                  Sites <ArrowUpRight className="h-3 w-3" />
+                </Link>
+              </div>
+              <div className="divide-y divide-border">
+                {crawlsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-5 w-5 text-primary animate-spin" />
+                  </div>
+                ) : crawls.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center px-4">
+                    <Play className="h-8 w-8 text-muted-foreground/40 mb-2" />
+                    <p className="text-sm text-muted-foreground">No crawls yet</p>
+                    <p className="text-xs text-muted-foreground/60 mt-0.5">Add a site to get started</p>
+                  </div>
+                ) : crawls.slice(0, 5).map((crawl: any) => (
+                  <div key={crawl.id} className="flex items-center gap-3 px-5 py-3">
+                    <CrawlStatusIcon status={crawl.status} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-foreground truncate">{crawl.site_id}</p>
+                      <p className="text-[10px] text-muted-foreground">{formatRelativeTime(crawl.created_at)}</p>
+                    </div>
+                    <span className={`text-[10px] font-semibold capitalize ${
+                      crawl.status === 'completed' ? 'text-green-500' :
+                      crawl.status === 'running' ? 'text-primary' :
+                      crawl.status === 'failed' ? 'text-red-500' :
+                      'text-muted-foreground'
+                    }`}>{crawl.status}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Upgrade CTA */}
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+            <div className="bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-violet-500/10 border border-primary/20 rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-foreground">Pro Plan</span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                Unlock AI auto-fix, daily crawls, and up to 10 sites. Fixes ship to WordPress, Shopify, and Webflow automatically.
+              </p>
+              <button className="w-full h-9 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white text-xs font-semibold shadow-lg shadow-cyan-500/25 transition-all">
+                Upgrade to Pro
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Quick start — only if no sites */}
+      {!sitesLoading && sites.length === 0 && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
+          <div className="bg-card border border-dashed border-border rounded-xl p-8 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Zap className="h-7 w-7 text-primary" />
+            </div>
+            <h2 className="text-base font-semibold text-foreground mb-2">Get started in 60 seconds</h2>
+            <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+              Add your first site and AutoSEO will crawl every page, detect issues, and prepare AI-generated fixes.
             </p>
-            <Link to="/sites" className="btn btn-primary mt-5" style={{ fontSize: '13px', padding: '8px 18px' }}>
-              Add your first site <ArrowRight className="w-3.5 h-3.5" />
+            <Link to="/dashboard/sites"
+              className="inline-flex items-center gap-2 h-10 px-6 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white text-sm font-semibold shadow-lg shadow-cyan-500/25 transition-all">
+              Add Your First Site <ArrowUpRight className="h-4 w-4" />
             </Link>
           </div>
         </motion.div>
-
-        {/* Recent activity */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.38 }}
-          className="card">
-
-          <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)' }}>
-              <Clock className="w-3.5 h-3.5" style={{ color: '#34d399' }} />
-            </div>
-            <div>
-              <h2 className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>Activity</h2>
-              <p className="text-xs" style={{ color: 'var(--text-3)' }}>Latest events</p>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center justify-center py-14 px-5">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3.5"
-              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-              <Sparkles className="w-5 h-5" style={{ color: 'var(--text-3)' }} />
-            </div>
-            <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-1)' }}>All quiet</p>
-            <p className="text-xs text-center" style={{ color: 'var(--text-3)' }}>
-              Events appear after your first crawl
-            </p>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Issue breakdown */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.44 }}
-        className="card">
-
-        <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.2)' }}>
-            <Bug className="w-3.5 h-3.5" style={{ color: '#f97316' }} />
-          </div>
-          <div>
-            <h2 className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>Issue Breakdown</h2>
-            <p className="text-xs" style={{ color: 'var(--text-3)' }}>By severity</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4">
-          {severities.map((s, i) => (
-            <div key={s.label} className="flex flex-col items-center justify-center py-8 gap-3 transition-colors duration-150 cursor-default"
-              style={{ borderRight: i < 3 ? `1px solid var(--border)` : 'none' }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = `${s.color}06`)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = '')}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                style={{ background: `${s.color}14`, border: `1px solid ${s.color}22` }}>
-                <s.icon className="w-4.5 h-4.5" style={{ color: s.color, width: 18, height: 18 }} />
-              </div>
-              <p className="text-2xl font-black" style={{ color: 'var(--text-1)', letterSpacing: '-0.03em' }}>{s.count}</p>
-              <p className="text-xs font-semibold" style={{ color: s.color }}>{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Onboarding CTA */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.5 }}
-        className="rounded-2xl p-6 border relative overflow-hidden"
-        style={{ background: 'var(--bg-surface)', borderColor: 'rgba(99,102,241,0.3)' }}>
-
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 50% 80% at 100% 50%, rgba(99,102,241,0.06) 0%, transparent 70%)' }} />
-
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 relative z-10">
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'var(--brand-dim)', border: '1px solid rgba(99,102,241,0.25)' }}>
-            <Zap className="w-5 h-5" style={{ color: '#818cf8' }} />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-semibold mb-0.5" style={{ color: 'var(--text-1)' }}>
-              Add your first site to get started
-            </p>
-            <p className="text-xs" style={{ color: 'var(--text-2)' }}>
-              Connect via crawler, WordPress, Shopify, Webflow, GitHub, or JS snippet. First crawl is instant.
-            </p>
-          </div>
-          <Link to="/sites" className="btn btn-primary flex-shrink-0" style={{ padding: '10px 20px', fontSize: '13px' }}>
-            Get Started <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-      </motion.div>
+      )}
     </div>
   )
 }
