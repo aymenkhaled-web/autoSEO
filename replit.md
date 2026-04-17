@@ -1,148 +1,109 @@
 # AutoSEO — Autonomous SEO Agent
 
 ## Overview
-AutoSEO is an autonomous SEO platform that crawls websites, analyzes them for SEO issues with Claude AI, and automatically applies fixes directly to your CMS. Fully redesigned with a premium dark 3D UI/UX design system.
+AutoSEO is an autonomous SEO platform that crawls websites, detects issues with AI analysis, and automatically applies fixes directly to your CMS. Built with React 19 + Vite frontend, FastAPI backend, PostgreSQL, and Supabase Auth.
 
-## Replit Environment Setup (Migrated)
-
-### Running Services
+## Running Services
 - **Frontend** — React/Vite on port 5000 (`cd apps/web && npm run dev`)
-- **Backend API** — FastAPI/Uvicorn on port 8000 (`cd apps/api && python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload`)
-- Vite dev server proxies `/api/*` → `http://localhost:8000` (no CORS issues in dev)
+- **Backend API** — FastAPI on port 8000 (`cd apps/api && python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload`)
 
-### Database
-- **Replit PostgreSQL** provisioned and connected via `DATABASE_URL` env var
-- All tables created via SQLAlchemy `Base.metadata.create_all`
-- `config.py` auto-converts `DATABASE_URL` to asyncpg format and strips `sslmode` param
-- SSL handled via `connect_args` in the engine
+## Database
+- **Replit PostgreSQL** connected via `DATABASE_URL` env var
+- All 22 tables created via SQLAlchemy `Base.metadata.create_all`
+- `config.py` auto-converts URL to asyncpg format
 
-### Authentication (Migrated from Supabase)
-- **No Supabase dependency** — auth is fully self-contained using FastAPI + bcrypt + python-jose
-- `/auth/register` and `/auth/login` endpoints issue JWTs signed with `SUPABASE_JWT_SECRET`
-- Frontend stores JWT in `localStorage` via `apps/web/src/lib/auth.ts`
-- `use-auth.ts` hook reads/writes the token directly — no Supabase JS client
-- Google OAuth button in UI throws a friendly error (not configured)
+## Authentication
+- **Supabase Auth** — email/password + Google OAuth
+- Frontend uses Supabase JS client (`apps/web/src/lib/supabase.ts`)
+- Backend validates Supabase JWTs using `SUPABASE_JWT_SECRET`
+- New users auto-provisioned with their own org on first sign-in
+- `/auth/sync` endpoint for post-login user sync
 
-### Key Env Vars Required for Full Functionality
-- `DATABASE_URL` — auto-provisioned by Replit
-- `SUPABASE_JWT_SECRET` — set to a strong secret (already configured in Replit secrets)
-- `ANTHROPIC_API_KEY` — for AI analysis features
-- `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` — for billing
+## Environment Variables
+| Variable | Purpose | Status |
+|---|---|---|
+| `DATABASE_URL` | PostgreSQL connection | Auto-provisioned |
+| `SUPABASE_JWT_SECRET` | Backend JWT validation | Configured |
+| `VITE_SUPABASE_URL` | Frontend Supabase URL | Configured |
+| `VITE_SUPABASE_ANON_KEY` | Frontend Supabase key | Configured |
+| `ANTHROPIC_API_KEY` | Claude AI features | Needed |
+| `STRIPE_SECRET_KEY` | Billing | Needed |
+| `STRIPE_WEBHOOK_SECRET` | Billing webhooks | Needed |
+| `REDIS_URL` | Queue/cache | Needed |
+| `DATAFORSEO_LOGIN` | Keyword rank tracking | Needed |
+| `AHREFS_API_KEY` | Backlink monitoring | Needed |
+| `RESEND_API_KEY` | Email delivery | Needed |
 
-## Current State (April 2026)
+## Frontend Pages (17 total)
+| Route | Page | Status |
+|---|---|---|
+| `/` | Landing | Built |
+| `/login` | Login | Built + Supabase |
+| `/signup` | Sign Up | Built + email confirm handling |
+| `/privacy` | Privacy Policy | Built |
+| `/terms` | Terms of Service | Built |
+| `/dashboard` | Overview | Built |
+| `/dashboard/sites` | Sites Grid | Built |
+| `/dashboard/sites/:id` | Site Detail (6 tabs) | Built |
+| `/dashboard/issues` | Issues List | Built |
+| `/dashboard/fixes` | AI Fixes | Built |
+| `/dashboard/analytics` | Analytics Charts | Built |
+| `/dashboard/keywords` | Keyword Tracking | Built |
+| `/dashboard/competitors` | Competitor Analysis | Built |
+| `/dashboard/reports` | Reports | Built |
+| `/dashboard/team` | Team Management | Built |
+| `/dashboard/integrations` | CMS Integrations | Built |
+| `/dashboard/api-keys` | API Keys | Built |
+| `/dashboard/billing` | Billing | Built |
+| `/dashboard/settings` | Settings | Built |
 
-### Key Dependencies
-- `sonner` — toast notifications (installed in apps/web)
-- `@tanstack/react-query` — server state management
-- `ky` — HTTP client (exported as `api` and `apiClient` alias from `@/lib/api-client`)
-- `framer-motion` — animations
-- `recharts` — charts (AnalyticsPage)
-- SQLAlchemy note: `UsageEvent.event_metadata` maps to DB column `metadata` (reserved attribute name workaround)
+## Backend Routers (14 total)
+`auth`, `sites`, `crawls`, `issues`, `fixes`, `snippet`, `webhooks`, `analytics`, `keywords`, `competitors`, `notifications`, `team`, `api_keys`, `usage`, `change_log`
 
-### What's Built (Frontend)
-- **Landing page** (`/`) — 3D animated hero orb, feature grid, pricing cards, stats, how-it-works section, footer
-- **Login page** (`/login`) — Split panel layout, Google OAuth, email/password form
-- **Signup page** (`/signup`) — Split panel with benefits list
-- **Dashboard** (`/dashboard`) — Stat cards, SEO trend chart, activity feed, issue breakdown, onboarding CTA
-- **Sites page** (`/dashboard/sites`) — Site grid, add-site modal with connection type selector
-- **Issues page** (`/dashboard/issues`) — Filter bar with severity/category/status, real API data wired via useQuery
-- **Fixes page** (`/dashboard/fixes`) — Pending/Applied/Rolled-back lists wired to real API, apply+rollback mutations
-- **Analytics page** (`/dashboard/analytics`) — Recharts line/bar charts from real API
-- **Keywords page** (`/dashboard/keywords`) — Rank tracking table with real data
-- **Competitors page** (`/dashboard/competitors`) — Competitor score cards with real data
-- **Team page** (`/dashboard/team`) — Member list, invite modal, role management
-- **API Keys page** (`/dashboard/api-keys`) — Generate + reveal-once keys
-- **Reports page** (`/dashboard/reports`) — Schedule modal, on-demand PDF placeholder
-- **Billing page** (`/dashboard/billing`) — Usage bars, plan cards, upgrade buttons
-- **Settings page** (`/dashboard/settings`) — Profile settings
-- **Dashboard layout** — Collapsible sidebar with grouped nav (Overview/SEO/Reports/Account), notification bell, theme toggle
+## Packages Built
+| Package | Status | Needs API Key |
+|---|---|---|
+| `packages/ai_engine/engine.py` | Fully implemented with stubs | `ANTHROPIC_API_KEY` |
+| `packages/cms_adapters/wordpress.py` | Fully implemented | WordPress credentials |
+| `packages/cms_adapters/github_adapter.py` | Fully implemented | `GITHUB_APP_ID` |
+| `packages/crawler/` | 4-layer crawler | `SCRAPFLY_API_KEY` (optional) |
+| `packages/snippet/snippet.js` | JS monitoring snippet | None |
 
-### What's Built (Backend — 14 routers)
-- `auth` — register/login/JWT, `sites` — CRUD, `crawls` — trigger/list, `issues` — full filter+pagination
-- `fixes` — apply/rollback with change_log, `snippet` — JS collector, `webhooks` — delivery queue
-- `analytics` — score trends, `keywords` — rank tracking, `competitors` — score cards
-- `notifications` — unread badge + mark read, `team` — invite/role management, `api_keys` — CRUD
-- `usage` — plan limits + usage bars, `change_log` — append-only audit trail
-- 4-layer real crawler: jina_layer, crawl4ai_layer, scrapfly_layer, JS-snippet
-- Full SQLAlchemy async models (22 models across 14 tables)
+## AI Engine (packages/ai_engine/engine.py)
+- `generate_fix()` — generates SEO fixes using Claude (falls back to stubs without API key)
+- `generate_content_brief()` — creates keyword-targeted content briefs
+- `generate_fixes_bulk()` — concurrent fix generation for multiple issues
+- Tier system: Tier 1 (auto-apply), Tier 2 (one-click), Tier 3 (manual)
+- Cost tracking per call (tokens + USD)
+- Uses Claude Haiku for simple fixes, Sonnet for complex ones
 
-### What Needs Work Next (Priority Order)
-1. **Claude AI integration** — packages/ai_engine for fix generation (ANTHROPIC_API_KEY needed)
-2. **CMS adapters** — WordPress first (packages/cms_adapters/wordpress.py)
-3. **Notification bell UI** — wire dropdown to /notifications API
-4. **Real-time crawl progress** — SSE endpoint for live crawl updates
-5. **PDF report generation** — weasyprint or similar for export
-6. **Stripe billing enforcement** — block crawls past plan limits
-7. **Fix verification** — re-crawl after CMS write to confirm fix applied
+## CMS Adapters
+- **WordPress** — REST API with Application Password/JWT auth. Detects Yoast/Rank Math. Reads + writes.
+- **GitHub** — Creates fix branches + PRs for Next.js, Astro, Hugo, Jekyll sites
+- Factory: `get_adapter(connection_type, **kwargs)`
 
-## Design System (v2 — Premium Dark)
+## How to Enable Email Login Without Confirmation
+For development/testing, go to your Supabase dashboard:
+https://supabase.com/dashboard/project/qqzdoyqeftbqoldhheut/auth/providers
+→ "Email" → disable "Confirm email"
+After disabling, users can sign up and log in immediately without confirming their email.
 
-### Color Palette
-- Background: `#040712` (base) → `#070d1f` (primary) → `#0c1428` (secondary) → `#0f1a30` (card)
-- Brand: `#6366f1` (indigo) with `#22d3ee` (cyan) accent
-- Text: `#f0f4ff` (primary) / `#8b9fc4` (secondary) / `#4d6080` (muted)
-- Borders: `rgba(99,102,241,0.12)` → `rgba(99,102,241,0.28)` on hover
-
-### Key CSS Classes
-- `.glass` / `.glass-heavy` — backdrop blur glassmorphism panels
-- `.gradient-text` — indigo→cyan gradient text
-- `.gradient-text-warm` — pink→indigo→cyan
-- `.gradient-border` — animated gradient border using CSS mask
-- `.card-3d` — 3D perspective hover transform
-- `.mesh-bg` — multi-radial ambient glow background
-- `.grid-pattern-animated` — animated scrolling grid for hero
-- `.dot-pattern` — subtle dot grid for section backgrounds
-- `.separator-beam` — horizontal gradient separator line
-- `.skeleton` — loading shimmer
-
-## Architecture Decisions (Final)
-| Layer | Tech |
+## Architecture
+| Layer | Technology |
 |---|---|
-| Frontend | React 19 + Vite 8 + TypeScript |
-| Styling | Tailwind CSS v4 + CSS custom properties |
+| Frontend | React 19 + Vite 8 + TypeScript + Tailwind CSS v4 |
 | State | Zustand + TanStack Query |
-| Auth | Supabase JS |
+| Auth | Supabase Auth (email + Google OAuth) |
 | Backend | FastAPI + SQLAlchemy async |
+| Database | PostgreSQL (Replit) + 22 models |
 | Queue | Celery + Redis |
-| DB | Supabase (PostgreSQL 15 + RLS) |
-| Payments | Stripe |
-| AI | Anthropic Claude |
+| AI | Anthropic Claude (Haiku/Sonnet) |
 | Crawler | Crawl4AI + Camoufox + ScrapFly |
+| Payments | Stripe (subscriptions + metered) |
 
-## Gap Analysis — What the Plan Missed
-
-### Critical gaps vs original plan:
-1. **No multi-tenant org structure wired up** — JWT claims with org_id not implemented
-2. **No Doppler** — secrets just use env vars locally, fine for now
-3. **Voyage AI embeddings** — duplicate content detection not mentioned in roadmap clearly
-4. **Crawl4AI + Camoufox** — listed but the actual Python packages aren't installed
-5. **Google Search Console integration** — in schema but no OAuth flow planned in phases
-6. **Hreflang validation** — in DB schema but not in issue types list
-7. **Stripe enforcement** — plan limits should block crawls past quota, not implemented
-8. **Fix verification** — re-crawl after CMS write to confirm fix applied, critical for trust
-
-### Good decisions in the plan:
-- 4-layer crawler with fallback is correct architecture
-- RLS from day one is right
-- Append-only change_log is essential for agency trust
-- JS snippet for client-side monitoring is differentiator
-
-## Dev Workflow
-
-### Frontend (port 5000)
-```bash
-cd apps/web && npm run dev
-```
-
-### Environment Variables Required
-- `VITE_SUPABASE_URL` — Supabase project URL
-- `VITE_SUPABASE_ANON_KEY` — Supabase anonymous key
-- `DATABASE_URL` — PostgreSQL async connection string
-- `SUPABASE_SERVICE_ROLE_KEY` — For server-side operations
-- `ANTHROPIC_API_KEY` — Claude API key
-- `REDIS_URL` — Redis connection URL
-- `STRIPE_SECRET_KEY` — Stripe billing
-
-## Deployment
-- Configured as static site: build `apps/web`, serve from `apps/web/dist`
-- Backend (FastAPI + workers) requires separate hosting: Railway recommended
+## What's Needed Next (API Keys Required)
+1. `ANTHROPIC_API_KEY` → enables real AI fix generation (stubs work without it)
+2. `STRIPE_SECRET_KEY` → enables real billing enforcement
+3. `DATAFORSEO_LOGIN` → enables live keyword rank tracking
+4. `AHREFS_API_KEY` → enables backlink monitoring
+5. `RESEND_API_KEY` → enables email notifications

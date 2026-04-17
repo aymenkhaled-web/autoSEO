@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Zap, Mail, Lock, ArrowRight, Eye, EyeOff, Sun, Moon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/hooks/use-auth'
@@ -19,6 +19,23 @@ function ThemeToggle() {
   )
 }
 
+function friendlyError(msg: string): string {
+  const m = msg.toLowerCase()
+  if (m.includes('email not confirmed')) {
+    return 'Please confirm your email address. Check your inbox for a confirmation link from AutoSEO.'
+  }
+  if (m.includes('invalid login credentials') || m.includes('invalid credentials')) {
+    return 'Incorrect email or password. Please try again.'
+  }
+  if (m.includes('too many requests')) {
+    return 'Too many attempts. Please wait a moment and try again.'
+  }
+  if (m.includes('user not found')) {
+    return 'No account found with that email. Would you like to sign up?'
+  }
+  return msg
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -34,9 +51,9 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await signIn(email, password)
-      navigate('/dashboard')
+      navigate('/dashboard', { replace: true })
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in')
+      setError(friendlyError(err.message || 'Failed to sign in'))
     } finally {
       setLoading(false)
     }
@@ -100,12 +117,14 @@ export default function LoginPage() {
             <p className="text-sm text-muted-foreground">Sign in to your account to continue</p>
           </div>
 
-          {error && (
-            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-              className="px-4 py-3 rounded-lg text-sm bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400">
-              {error}
-            </motion.div>
-          )}
+          <AnimatePresence mode="wait">
+            {error && (
+              <motion.div key="error" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className="px-4 py-3 rounded-lg text-sm bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400">
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <button onClick={signInWithGoogle}
             className="w-full h-11 px-4 rounded-lg text-sm font-medium border border-border bg-card text-foreground flex items-center justify-center gap-3 hover:bg-muted transition-colors">

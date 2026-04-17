@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { motion } from 'framer-motion'
-import { Zap, Mail, Lock, User, ArrowRight, Eye, EyeOff, CheckCircle2, Sun, Moon } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Zap, Mail, Lock, User, ArrowRight, Eye, EyeOff, CheckCircle2, Sun, Moon, MailCheck } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -27,6 +27,7 @@ export default function SignupPage() {
   const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
   const { signUp, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
 
@@ -36,17 +37,64 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!agreed) { setError('Please agree to the terms'); return }
+    if (!agreed) { setError('Please agree to the terms to continue'); return }
+    if (password.length < 8) { setError('Password must be at least 8 characters'); return }
     setError('')
     setLoading(true)
     try {
-      await signUp(email, password, name)
-      navigate('/dashboard')
+      const data = await signUp(email, password, name)
+      if (data.session) {
+        // Email confirmation is disabled — user is immediately logged in
+        navigate('/dashboard', { replace: true })
+      } else {
+        // Email confirmation is required — show check-email state
+        setEmailSent(true)
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to create account')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (emailSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-8">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-md text-center space-y-6"
+        >
+          <div className="flex justify-center">
+            <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+              <MailCheck className="h-8 w-8 text-cyan-500" />
+            </div>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Check your email</h1>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              We sent a confirmation link to <span className="font-medium text-foreground">{email}</span>.
+              Click the link in that email to activate your account and sign in.
+            </p>
+          </div>
+          <div className="rounded-xl border border-border bg-muted/40 p-4 text-left space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Didn't receive it?</p>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li>• Check your spam or junk folder</li>
+              <li>• Make sure <span className="text-foreground font-medium">{email}</span> is correct</li>
+              <li>• Allow up to 2 minutes for delivery</li>
+            </ul>
+          </div>
+          <Link
+            to="/login"
+            className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium"
+          >
+            Back to sign in
+          </Link>
+        </motion.div>
+      </div>
+    )
   }
 
   return (
@@ -118,12 +166,14 @@ export default function SignupPage() {
             <p className="text-sm text-muted-foreground">Start automating your SEO in under 60 seconds</p>
           </div>
 
-          {error && (
-            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-              className="px-4 py-3 rounded-lg text-sm bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400">
-              {error}
-            </motion.div>
-          )}
+          <AnimatePresence mode="wait">
+            {error && (
+              <motion.div key="error" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className="px-4 py-3 rounded-lg text-sm bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400">
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <button onClick={signInWithGoogle}
             className="w-full h-11 px-4 rounded-lg text-sm font-medium border border-border bg-card text-foreground flex items-center justify-center gap-3 hover:bg-muted transition-colors">
@@ -203,8 +253,8 @@ export default function SignupPage() {
               </div>
               <span className="text-xs text-muted-foreground leading-relaxed">
                 I agree to the{' '}
-                <a href="#" className="text-primary hover:underline">Terms of Service</a>{' '}and{' '}
-                <a href="#" className="text-primary hover:underline">Privacy Policy</a>
+                <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>{' '}and{' '}
+                <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
               </span>
             </label>
 

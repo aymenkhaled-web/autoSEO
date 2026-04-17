@@ -4,12 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from 'next-themes'
 import {
   LayoutDashboard, Globe, Bug, Wrench, BarChart3,
-  Settings, Zap, ChevronLeft, ChevronRight, Bell,
+  Settings, Zap, ChevronLeft, ChevronRight,
   Sun, Moon, LogOut, Menu, X, Target, Swords,
   Users, Key, FileText, CreditCard, Puzzle,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useAppStore } from '@/stores/app-store'
+import NotificationBell from '@/components/ui/NotificationBell'
 
 const NAV_GROUPS = [
   {
@@ -39,6 +40,7 @@ const NAV_GROUPS = [
     label: 'Account',
     items: [
       { href: '/dashboard/team', icon: Users, label: 'Team' },
+      { href: '/dashboard/integrations', icon: Puzzle, label: 'Integrations' },
       { href: '/dashboard/api-keys', icon: Key, label: 'API Keys' },
       { href: '/dashboard/billing', icon: CreditCard, label: 'Billing' },
       { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
@@ -237,10 +239,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <button className="relative h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
-              <Bell className="h-4 w-4" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
-            </button>
+            <NotificationBell />
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-xs font-bold text-white cursor-pointer">
               {initials}
             </div>

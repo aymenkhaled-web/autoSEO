@@ -4,8 +4,11 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import LandingPage from '@/pages/LandingPage'
 import LoginPage from '@/pages/LoginPage'
 import SignupPage from '@/pages/SignupPage'
+import PrivacyPage from '@/pages/PrivacyPage'
+import TermsPage from '@/pages/TermsPage'
 import DashboardPage from '@/pages/DashboardPage'
 import SitesPage from '@/pages/SitesPage'
+import SiteDetailPage from '@/pages/SiteDetailPage'
 import IssuesPage from '@/pages/IssuesPage'
 import FixesPage from '@/pages/FixesPage'
 import SettingsPage from '@/pages/SettingsPage'
@@ -16,6 +19,7 @@ import TeamPage from '@/pages/TeamPage'
 import ApiKeysPage from '@/pages/ApiKeysPage'
 import ReportsPage from '@/pages/ReportsPage'
 import BillingPage from '@/pages/BillingPage'
+import IntegrationsPage from '@/pages/IntegrationsPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { loading, isAuthenticated } = useAuth()
@@ -51,18 +55,28 @@ function DashboardRoute({ children }: { children: React.ReactNode }) {
   )
 }
 
+function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
+  const { loading, isAuthenticated } = useAuth()
+  if (loading) return null
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />
+  return <>{children}</>
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         {/* Public */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/login" element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
+        <Route path="/signup" element={<PublicOnlyRoute><SignupPage /></PublicOnlyRoute>} />
 
         {/* Dashboard */}
         <Route path="/dashboard" element={<DashboardRoute><DashboardPage /></DashboardRoute>} />
         <Route path="/dashboard/sites" element={<DashboardRoute><SitesPage /></DashboardRoute>} />
+        <Route path="/dashboard/sites/:id" element={<DashboardRoute><SiteDetailPage /></DashboardRoute>} />
         <Route path="/dashboard/issues" element={<DashboardRoute><IssuesPage /></DashboardRoute>} />
         <Route path="/dashboard/fixes" element={<DashboardRoute><FixesPage /></DashboardRoute>} />
         <Route path="/dashboard/analytics" element={<DashboardRoute><AnalyticsPage /></DashboardRoute>} />
@@ -73,8 +87,9 @@ export default function App() {
         <Route path="/dashboard/api-keys" element={<DashboardRoute><ApiKeysPage /></DashboardRoute>} />
         <Route path="/dashboard/billing" element={<DashboardRoute><BillingPage /></DashboardRoute>} />
         <Route path="/dashboard/settings" element={<DashboardRoute><SettingsPage /></DashboardRoute>} />
+        <Route path="/dashboard/integrations" element={<DashboardRoute><IntegrationsPage /></DashboardRoute>} />
 
-        {/* Legacy redirects for old paths */}
+        {/* Legacy redirects */}
         <Route path="/sites" element={<Navigate to="/dashboard/sites" replace />} />
         <Route path="/issues" element={<Navigate to="/dashboard/issues" replace />} />
         <Route path="/fixes" element={<Navigate to="/dashboard/fixes" replace />} />
