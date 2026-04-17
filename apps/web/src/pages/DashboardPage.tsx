@@ -1,108 +1,45 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router'
 import {
   Globe, Bug, Wrench, TrendingUp, ArrowUpRight,
   BarChart3, Clock, CheckCircle2, AlertTriangle, XCircle,
-  ArrowRight, Sparkles, Activity, Zap
+  ArrowRight, Sparkles, Activity, Zap, Plus
 } from 'lucide-react'
 
 const stats = [
-  {
-    label: 'Sites Monitored',
-    value: '0',
-    icon: Globe,
-    color: '#818cf8',
-    bg: 'rgba(129,140,248,0.12)',
-    border: 'rgba(129,140,248,0.2)',
-    change: null,
-    href: '/sites',
-  },
-  {
-    label: 'Issues Found',
-    value: '0',
-    icon: Bug,
-    color: '#f97316',
-    bg: 'rgba(249,115,22,0.1)',
-    border: 'rgba(249,115,22,0.18)',
-    change: null,
-    href: '/issues',
-  },
-  {
-    label: 'Fixes Applied',
-    value: '0',
-    icon: Wrench,
-    color: '#34d399',
-    bg: 'rgba(52,211,153,0.1)',
-    border: 'rgba(52,211,153,0.18)',
-    change: null,
-    href: '/fixes',
-  },
-  {
-    label: 'Avg SEO Score',
-    value: '--',
-    icon: TrendingUp,
-    color: '#22d3ee',
-    bg: 'rgba(34,211,238,0.1)',
-    border: 'rgba(34,211,238,0.18)',
-    change: null,
-    href: '/reports',
-  },
+  { label: 'Sites Monitored', value: '0', icon: Globe,     color: '#818cf8', href: '/sites' },
+  { label: 'Issues Found',    value: '0', icon: Bug,       color: '#f97316', href: '/issues' },
+  { label: 'Fixes Applied',   value: '0', icon: Wrench,    color: '#34d399', href: '/fixes' },
+  { label: 'Avg SEO Score',   value: '—', icon: TrendingUp,color: '#22d3ee', href: '/reports' },
 ]
 
 const severities = [
-  { label: 'Critical', count: 0, color: '#ef4444', icon: XCircle, bg: 'rgba(239,68,68,0.1)' },
-  { label: 'High',     count: 0, color: '#f97316', icon: AlertTriangle, bg: 'rgba(249,115,22,0.08)' },
-  { label: 'Medium',   count: 0, color: '#eab308', icon: AlertTriangle, bg: 'rgba(234,179,8,0.08)' },
-  { label: 'Low',      count: 0, color: '#22c55e', icon: CheckCircle2, bg: 'rgba(34,197,94,0.08)' },
+  { label: 'Critical', count: 0, color: '#ef4444', icon: XCircle },
+  { label: 'High',     count: 0, color: '#f97316', icon: AlertTriangle },
+  { label: 'Medium',   count: 0, color: '#eab308', icon: AlertTriangle },
+  { label: 'Low',      count: 0, color: '#22c55e', icon: CheckCircle2 },
 ]
 
 function StatCard({ stat, index }: { stat: typeof stats[0]; index: number }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.08, ease: [0.34, 1.2, 0.64, 1] }}
-    >
-      <Link to={stat.href} className="block">
-        <div className="rounded-2xl p-5 border relative overflow-hidden group cursor-pointer transition-all duration-200"
-          style={{
-            background: `linear-gradient(145deg, ${stat.bg}, var(--color-bg-card))`,
-            borderColor: stat.border,
-            boxShadow: 'var(--shadow-card)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px) scale(1.01)'
-            e.currentTarget.style.boxShadow = `0 0 0 1px ${stat.border}, 0 8px 32px rgba(0,0,0,0.4), 0 0 24px ${stat.color}15`
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = ''
-            e.currentTarget.style.boxShadow = 'var(--shadow-card)'
-          }}
-        >
-          {/* Corner glow */}
-          <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full pointer-events-none"
-            style={{ background: `radial-gradient(circle, ${stat.color}20, transparent 70%)` }} />
-
-          {/* Top beam */}
-          <div className="absolute top-0 left-4 right-4 h-px"
-            style={{ background: `linear-gradient(90deg, transparent, ${stat.color}40, transparent)` }} />
-
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center relative"
-              style={{ background: stat.bg, border: `1px solid ${stat.border}` }}>
-              <stat.icon className="w-5 h-5" style={{ color: stat.color }} />
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: index * 0.07 }}>
+      <Link to={stat.href} className="block group">
+        <div className="stat-card transition-all duration-200 group-hover:border-white/[0.12]"
+          style={{ cursor: 'pointer' }}>
+          <div className="flex items-start justify-between mb-5">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{ background: `${stat.color}16`, border: `1px solid ${stat.color}28` }}>
+              <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
             </div>
-            <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ color: stat.color }} />
+            <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+              style={{ color: 'var(--text-3)' }} />
           </div>
-
-          <p className="text-3xl font-black mb-1 tracking-tight" style={{ color: 'var(--color-text-primary)' }}>
+          <p className="text-3xl font-black tracking-tight mb-1" style={{ color: 'var(--text-1)', letterSpacing: '-0.03em' }}>
             {stat.value}
           </p>
-          <p className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
-            {stat.label}
-          </p>
+          <p className="text-sm" style={{ color: 'var(--text-2)' }}>{stat.label}</p>
         </div>
       </Link>
     </motion.div>
@@ -110,210 +47,173 @@ function StatCard({ stat, index }: { stat: typeof stats[0]; index: number }) {
 }
 
 export default function DashboardPage() {
+  const [activePeriod, setActivePeriod] = useState('30d')
   const periods = ['30d', '90d', '1y']
 
   return (
-    <div className="space-y-6 max-w-full">
+    <div className="space-y-5">
 
-      {/* ── Header ── */}
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-        className="flex items-center justify-between">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
+        className="flex items-center justify-between pt-1">
         <div>
-          <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--color-text-primary)' }}>
-            Dashboard
-          </h1>
-          <p className="mt-1 text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-            Your SEO command center — all sites at a glance
-          </p>
+          <h1 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-1)', letterSpacing: '-0.02em' }}>Dashboard</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>Your SEO command center</p>
         </div>
-        <Link to="/sites"
-          className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
-          style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', boxShadow: '0 0 20px rgba(99,102,241,0.35)' }}>
-          <Zap className="w-4 h-4" />
+        <Link to="/sites" className="btn btn-primary" style={{ gap: '6px', padding: '8px 16px', fontSize: '13px' }}>
+          <Plus className="w-3.5 h-3.5" />
           Add Site
         </Link>
       </motion.div>
 
-      {/* ── Stats Grid ── */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        {stats.map((stat, i) => <StatCard key={stat.label} stat={stat} index={i} />)}
+      {/* Stats row */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+        {stats.map((s, i) => <StatCard key={s.label} stat={s} index={i} />)}
       </div>
 
-      {/* ── Main Content ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      {/* Main content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
 
-        {/* Score Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.35 }}
-          className="lg:col-span-2 rounded-2xl border overflow-hidden"
-          style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}
-        >
-          {/* Card header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
+        {/* Score chart */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.3 }}
+          className="lg:col-span-2 card">
+
+          <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center"
                 style={{ background: 'rgba(129,140,248,0.12)', border: '1px solid rgba(129,140,248,0.2)' }}>
-                <Activity className="w-4 h-4" style={{ color: '#818cf8' }} />
+                <Activity className="w-3.5 h-3.5" style={{ color: '#818cf8' }} />
               </div>
               <div>
-                <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>SEO Score Trend</h2>
-                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Score history over time</p>
+                <h2 className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>SEO Score Trend</h2>
+                <p className="text-xs" style={{ color: 'var(--text-3)' }}>Score history over time</p>
               </div>
             </div>
-            <div className="flex gap-1">
-              {periods.map((period, i) => (
-                <button key={period}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150"
-                  style={{
-                    background: i === 0 ? 'rgba(99,102,241,0.15)' : 'transparent',
-                    color: i === 0 ? 'var(--color-brand-light)' : 'var(--color-text-muted)',
-                    border: i === 0 ? '1px solid rgba(99,102,241,0.25)' : '1px solid transparent',
-                  }}>
-                  {period}
+            <div className="flex gap-0.5 p-0.5 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+              {periods.map((p) => (
+                <button key={p} onClick={() => setActivePeriod(p)}
+                  className="px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-100"
+                  style={activePeriod === p
+                    ? { background: 'var(--bg-overlay)', color: 'var(--text-1)' }
+                    : { color: 'var(--text-3)' }}>
+                  {p}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Empty state */}
-          <div className="flex flex-col items-center justify-center py-20 px-6">
-            {/* Decorative empty chart */}
-            <div className="relative w-48 h-24 mb-6">
-              <svg viewBox="0 0 200 80" fill="none" className="w-full h-full">
-                <defs>
-                  <linearGradient id="chartGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
-                    <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.15" />
-                  </linearGradient>
-                </defs>
-                {/* Grid lines */}
-                {[20, 40, 60].map((y) => (
-                  <line key={y} x1="0" y1={y} x2="200" y2={y} stroke="rgba(99,102,241,0.08)" strokeWidth="1" />
-                ))}
-                {/* Fake chart area */}
-                <path d="M0 70 Q40 55 60 60 Q90 65 120 45 Q150 30 180 35 L200 38 L200 80 L0 80 Z"
-                  fill="url(#chartGrad)" />
-                <path d="M0 70 Q40 55 60 60 Q90 65 120 45 Q150 30 180 35 L200 38"
-                  stroke="rgba(99,102,241,0.4)" strokeWidth="1.5" fill="none" strokeDasharray="4 4" />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{ background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)' }}>
-                  <BarChart3 className="w-6 h-6" style={{ color: 'var(--color-brand)' }} />
-                </div>
-              </div>
-            </div>
-            <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>No data yet</p>
-            <p className="text-xs text-center max-w-xs" style={{ color: 'var(--color-text-muted)' }}>
-              Add a site and run your first crawl to see score trends over time
+          <div className="flex flex-col items-center justify-center py-16 px-6">
+            <svg viewBox="0 0 320 100" fill="none" className="w-64 h-20 mb-5 opacity-30">
+              <defs>
+                <linearGradient id="cg" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#6366f1" stopOpacity="0.5"/>
+                  <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.2"/>
+                </linearGradient>
+              </defs>
+              {[25, 50, 75].map((y) => (
+                <line key={y} x1="0" y1={y} x2="320" y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>
+              ))}
+              <path d="M0 85 Q60 75 90 78 Q140 84 180 62 Q230 42 270 48 L320 45 L320 100 L0 100 Z" fill="url(#cg)" />
+              <path d="M0 85 Q60 75 90 78 Q140 84 180 62 Q230 42 270 48 L320 45"
+                stroke="rgba(99,102,241,0.5)" strokeWidth="1.5" fill="none" strokeDasharray="5 4"/>
+            </svg>
+            <p className="text-sm font-semibold mb-1.5" style={{ color: 'var(--text-1)' }}>No data yet</p>
+            <p className="text-xs text-center" style={{ color: 'var(--text-3)', maxWidth: 260 }}>
+              Add a site and run your first crawl to see SEO score trends over time
             </p>
-            <Link to="/sites"
-              className="mt-5 flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white"
-              style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}>
+            <Link to="/sites" className="btn btn-primary mt-5" style={{ fontSize: '13px', padding: '8px 18px' }}>
               Add your first site <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </motion.div>
 
-        {/* Recent Activity */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.42 }}
-          className="rounded-2xl border overflow-hidden"
-          style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}
-        >
-          <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.18)' }}>
-              <Clock className="w-4 h-4" style={{ color: '#34d399' }} />
+        {/* Recent activity */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.38 }}
+          className="card">
+
+          <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)' }}>
+              <Clock className="w-3.5 h-3.5" style={{ color: '#34d399' }} />
             </div>
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>Recent Activity</h2>
-              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Latest events</p>
+              <h2 className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>Activity</h2>
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>Latest events</p>
             </div>
           </div>
 
           <div className="flex flex-col items-center justify-center py-14 px-5">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-              style={{ background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)' }}>
-              <Sparkles className="w-6 h-6" style={{ color: 'var(--color-brand)' }} />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3.5"
+              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+              <Sparkles className="w-5 h-5" style={{ color: 'var(--text-3)' }} />
             </div>
-            <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>All quiet here</p>
-            <p className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>
-              Activity will appear once you start your first crawl
+            <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-1)' }}>All quiet</p>
+            <p className="text-xs text-center" style={{ color: 'var(--text-3)' }}>
+              Events appear after your first crawl
             </p>
           </div>
         </motion.div>
       </div>
 
-      {/* ── Issue Breakdown ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.5 }}
-        className="rounded-2xl border overflow-hidden"
-        style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}
-      >
-        <div className="flex items-center gap-3 px-6 py-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.18)' }}>
-            <Bug className="w-4 h-4" style={{ color: '#f97316' }} />
+      {/* Issue breakdown */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.44 }}
+        className="card">
+
+        <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+            style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.2)' }}>
+            <Bug className="w-3.5 h-3.5" style={{ color: '#f97316' }} />
           </div>
           <div>
-            <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>Issue Breakdown</h2>
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>By severity level</p>
+            <h2 className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>Issue Breakdown</h2>
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>By severity</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px" style={{ background: 'var(--color-border)' }}>
-          {severities.map((item) => (
-            <div key={item.label} className="flex flex-col items-center justify-center py-6 gap-2 transition-colors duration-150 cursor-default"
-              style={{ background: 'var(--color-bg-card)' }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = item.bg)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--color-bg-card)')}>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: item.bg, border: `1px solid ${item.color}25` }}>
-                <item.icon className="w-5 h-5" style={{ color: item.color }} />
+        <div className="grid grid-cols-2 md:grid-cols-4">
+          {severities.map((s, i) => (
+            <div key={s.label} className="flex flex-col items-center justify-center py-8 gap-3 transition-colors duration-150 cursor-default"
+              style={{ borderRight: i < 3 ? `1px solid var(--border)` : 'none' }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = `${s.color}06`)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = '')}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                style={{ background: `${s.color}14`, border: `1px solid ${s.color}22` }}>
+                <s.icon className="w-4.5 h-4.5" style={{ color: s.color, width: 18, height: 18 }} />
               </div>
-              <p className="text-2xl font-black" style={{ color: 'var(--color-text-primary)' }}>{item.count}</p>
-              <p className="text-xs font-medium" style={{ color: item.color }}>{item.label}</p>
+              <p className="text-2xl font-black" style={{ color: 'var(--text-1)', letterSpacing: '-0.03em' }}>{s.count}</p>
+              <p className="text-xs font-semibold" style={{ color: s.color }}>{s.label}</p>
             </div>
           ))}
         </div>
       </motion.div>
 
-      {/* ── Onboarding CTA ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.58 }}
+      {/* Onboarding CTA */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.5 }}
         className="rounded-2xl p-6 border relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(34,211,238,0.05))',
-          borderColor: 'rgba(99,102,241,0.25)',
-        }}
-      >
-        <div className="absolute top-0 left-0 right-0 h-px"
-          style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.5), rgba(34,211,238,0.3), transparent)' }} />
-        <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.15), transparent 70%)' }} />
+        style={{ background: 'var(--bg-surface)', borderColor: 'rgba(99,102,241,0.3)' }}>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 relative z-10">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.3)' }}>
-            <Zap className="w-6 h-6" style={{ color: '#818cf8' }} />
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse 50% 80% at 100% 50%, rgba(99,102,241,0.06) 0%, transparent 70%)' }} />
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 relative z-10">
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'var(--brand-dim)', border: '1px solid rgba(99,102,241,0.25)' }}>
+            <Zap className="w-5 h-5" style={{ color: '#818cf8' }} />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-bold mb-0.5" style={{ color: 'var(--color-text-primary)' }}>
-              Ready to start? Add your first site
+            <p className="text-sm font-semibold mb-0.5" style={{ color: 'var(--text-1)' }}>
+              Add your first site to get started
             </p>
-            <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-              Connect via web crawler, WordPress, Shopify, Webflow, GitHub, or JS snippet. First crawl is instant.
+            <p className="text-xs" style={{ color: 'var(--text-2)' }}>
+              Connect via crawler, WordPress, Shopify, Webflow, GitHub, or JS snippet. First crawl is instant.
             </p>
           </div>
-          <Link to="/sites"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white flex-shrink-0 transition-all"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', boxShadow: '0 0 20px rgba(99,102,241,0.4)' }}>
-            Get Started <ArrowRight className="w-4 h-4" />
+          <Link to="/sites" className="btn btn-primary flex-shrink-0" style={{ padding: '10px 20px', fontSize: '13px' }}>
+            Get Started <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
       </motion.div>
