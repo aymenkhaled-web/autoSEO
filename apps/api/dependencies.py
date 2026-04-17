@@ -1,6 +1,7 @@
 """FastAPI dependency injection — DB sessions, auth context, rate limiting."""
 from fastapi import Depends, HTTPException, Header, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from jose import jwt, JWTError
 from uuid import UUID
 from typing import Optional
@@ -8,6 +9,7 @@ import redis.asyncio as aioredis
 import time
 
 from models.database import AsyncSessionLocal
+from models.tables import User, Organization
 from schemas.auth import AuthContext
 from config import get_settings
 
@@ -44,11 +46,12 @@ async def get_redis() -> Optional[aioredis.Redis]:
 # --- JWT Auth ---
 async def get_current_user(
     authorization: str = Header(None),
+    db: AsyncSession = Depends(get_db),
 ) -> AuthContext:
     """Extract and validate JWT from Authorization header.
     
-    Returns an AuthContext with user_id, org_id, role, email.
-    Works with both Supabase JWTs and local dev tokens.
+    Supports both Supabase-issued JWTs and locally-issued JWTs.
+    Looks up org_id from the database when not present in the token.
     """
     if not authorization:
         raise HTTPException(
@@ -57,7 +60,6 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Extract Bearer token
     scheme, _, token = authorization.partition(" ")
     if scheme.lower() != "bearer" or not token:
         raise HTTPException(
@@ -78,35 +80,88 @@ async def get_current_user(
             detail=f"Invalid token: {str(e)}",
         )
 
-    # Extract claims
-    user_id = payload.get("sub")
-    org_id = payload.get("org_id")
-    role = payload.get("user_role", "member")
-    email = payload.get("email", "")
-
-    if not user_id:
+    user_id_str = payload.get("sub")
+    if not user_id_str:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token missing subject claim",
         )
 
+    try:
+        user_id = UUID(user_id_str)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user ID in token",
+        )
+
+    # Try to get org_id from token first (locally-issued JWTs have it)
+    org_id_str = payload.get("org_id")
+    role = payload.get("user_role", "member")
+    email = payload.get("email", "")
+
+    # If org_id not in token (Supabase-issued JWT), look it up in DB
+    if not org_id_str:
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+
+        if not user:
+            # Auto-provision: create org + user for new Supabase auth users
+            import uuid, re
+            from datetime import datetime, timezone
+
+            email = payload.get("email", "") or payload.get("user_metadata", {}).get("email", "")
+            full_name = (payload.get("user_metadata") or {}).get("full_name", "")
+
+            def _slugify(text: str) -> str:
+                slug = re.sub(r"[^\w\s-]", "", (text or "user").lower())
+                return re.sub(r"[-\s]+", "-", slug).strip("-") or "user"
+
+            base_slug = _slugify(email.split("@")[0] if email else "user")
+            slug = f"{base_slug}-{str(uuid.uuid4())[:8]}"
+
+            org = Organization(name=f"{full_name or email.split('@')[0] or 'My'}'s Organization", slug=slug, plan="starter")
+            db.add(org)
+            await db.flush()
+
+            user = User(
+                id=user_id,
+                org_id=org.id,
+                role="owner",
+                email=email,
+                full_name=full_name or None,
+            )
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+
+        org_id = user.org_id
+        role = user.role
+        email = user.email
+    else:
+        try:
+            org_id = UUID(org_id_str)
+        except ValueError:
+            org_id = user_id  # Fallback
+
     return AuthContext(
-        user_id=UUID(user_id),
-        org_id=UUID(org_id) if org_id else UUID(user_id),  # Fallback for dev
+        user_id=user_id,
+        org_id=org_id,
         role=role,
         email=email,
     )
 
 
-# --- Optional Auth (for public endpoints that benefit from auth) ---
+# --- Optional Auth ---
 async def get_optional_user(
     authorization: str = Header(None),
+    db: AsyncSession = Depends(get_db),
 ) -> Optional[AuthContext]:
     """Like get_current_user but returns None if no auth header."""
     if not authorization:
         return None
     try:
-        return await get_current_user(authorization)
+        return await get_current_user(authorization, db)
     except HTTPException:
         return None
 
@@ -118,11 +173,11 @@ async def rate_limit(
 ):
     """Redis sliding window rate limiter — 100 requests per minute per IP. Skipped if Redis unavailable."""
     if redis is None:
-        return  # Skip rate limiting if Redis is not available
+        return
 
     client_ip = request.client.host if request.client else "unknown"
     key = f"rate_limit:{client_ip}"
-    window = 60  # seconds
+    window = 60
     max_requests = 100
 
     current = await redis.get(key)
@@ -131,7 +186,7 @@ async def rate_limit(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Rate limit exceeded. Max 100 requests per minute.",
         )
-    
+
     pipe = redis.pipeline()
     pipe.incr(key)
     pipe.expire(key, window)

@@ -131,3 +131,20 @@ async def get_my_org(
     if not org:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
     return org
+
+
+@router.post("/sync", response_model=UserResponse)
+async def sync_user(
+    auth: AuthContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Sync Supabase-authenticated user into local DB. Auto-called after OAuth login.
+    
+    The get_current_user dependency already auto-provisions the user,
+    so this just returns the current user profile.
+    """
+    result = await db.execute(select(User).where(User.id == auth.user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found after sync")
+    return user

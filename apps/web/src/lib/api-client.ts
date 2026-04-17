@@ -1,15 +1,16 @@
 import ky from 'ky'
-import { getToken, clearToken } from './auth'
+import { supabase } from './supabase'
 
 const API_BASE = '/api'
 
 export const api = ky.extend({
-  prefixUrl: API_BASE,
+  prefix: API_BASE,
   timeout: 30000,
   hooks: {
     beforeRequest: [
       async (request) => {
-        const token = getToken()
+        const { data: { session } } = await supabase.auth.getSession()
+        const token = session?.access_token
         if (token) {
           request.headers.set('Authorization', `Bearer ${token}`)
         }
@@ -18,7 +19,7 @@ export const api = ky.extend({
     afterResponse: [
       async (_request, _options, response) => {
         if (response.status === 401) {
-          clearToken()
+          await supabase.auth.signOut()
           window.location.href = '/login'
         }
       },
@@ -30,12 +31,10 @@ export const api = ky.extend({
 
 // Auth
 export const authApi = {
-  register: (data: { email: string; password: string; full_name: string; org_name: string }) =>
-    api.post('auth/register', { json: data }).json<{ access_token: string; token_type: string; expires_in: number }>(),
-  login: (data: { email: string; password: string }) =>
-    api.post('auth/login', { json: data }).json<{ access_token: string; token_type: string; expires_in: number }>(),
   getMe: () => api.get('auth/me').json<any>(),
   getOrg: () => api.get('auth/org').json<any>(),
+  syncUser: (data: { full_name?: string; org_name?: string }) =>
+    api.post('auth/sync', { json: data }).json<any>(),
 }
 
 // Sites
