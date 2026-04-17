@@ -11,7 +11,7 @@ import FixesPage from '@/pages/FixesPage'
 import SettingsPage from '@/pages/SettingsPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { loading } = useAuth()
+  const { loading, isAuthenticated } = useAuth()
 
   if (loading) {
     return (
@@ -28,6 +28,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     )
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
   }
 
   return <>{children}</>

@@ -1,68 +1,69 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import type { Session, User } from '@supabase/supabase-js'
+import { useState, useEffect, useCallback } from 'react'
+import { authApi } from '@/lib/api-client'
+import { getToken, setToken, clearToken, isAuthenticated, getTokenPayload } from '@/lib/auth'
+
+interface AuthUser {
+  id: string
+  email: string
+  org_id: string
+  role: string
+}
 
 export function useAuth() {
-  const [session, setSession] = useState<Session | null>(null)
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session)
-        setUser(session?.user ?? null)
-        setLoading(false)
+  const loadUser = useCallback(() => {
+    if (isAuthenticated()) {
+      const payload = getTokenPayload()
+      if (payload) {
+        setUser({ id: payload.sub, email: payload.email, org_id: payload.org_id, role: payload.user_role })
       }
-    )
-
-    return () => subscription.unsubscribe()
+    } else {
+      setUser(null)
+    }
+    setLoading(false)
   }, [])
 
+  useEffect(() => {
+    loadUser()
+  }, [loadUser])
+
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw error
+    const data = await authApi.login({ email, password })
+    setToken(data.access_token)
+    const payload = getTokenPayload()
+    if (payload) {
+      setUser({ id: payload.sub, email: payload.email, org_id: payload.org_id, role: payload.user_role })
+    }
     return data
   }
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName },
-      },
-    })
-    if (error) throw error
+    const data = await authApi.register({ email, password, full_name: fullName, org_name: `${fullName}'s Org` })
+    setToken(data.access_token)
+    const payload = getTokenPayload()
+    if (payload) {
+      setUser({ id: payload.sub, email: payload.email, org_id: payload.org_id, role: payload.user_role })
+    }
     return data
   }
 
   const signInWithGoogle = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/dashboard` },
-    })
-    if (error) throw error
-    return data
+    throw new Error('Google sign-in is not configured. Please use email and password.')
   }
 
-  const signOut = async () => {
-    await supabase.auth.signOut()
+  const signOut = () => {
+    clearToken()
+    setUser(null)
+    window.location.href = '/login'
   }
 
   return {
-    session,
+    session: user ? { user } : null,
     user,
     loading,
-    isAuthenticated: !!session,
+    isAuthenticated: !!user,
     signIn,
     signUp,
     signInWithGoogle,

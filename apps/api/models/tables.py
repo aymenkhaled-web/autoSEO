@@ -36,6 +36,7 @@ class User(Base):
     email = Column(Text, nullable=False)
     full_name = Column(Text)
     avatar_url = Column(Text)
+    password_hash = Column(Text)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
 
     # Relationships

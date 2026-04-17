@@ -1,9 +1,7 @@
 import ky from 'ky'
-import { getAccessToken } from './supabase'
+import { getToken, clearToken } from './auth'
 
-// In development, Vite proxies /api -> http://localhost:8000
-// In production (static), this should point to the deployed API
-const API_BASE = import.meta.env.VITE_API_URL || '/api'
+const API_BASE = '/api'
 
 export const api = ky.extend({
   prefixUrl: API_BASE,
@@ -11,7 +9,7 @@ export const api = ky.extend({
   hooks: {
     beforeRequest: [
       async (request) => {
-        const token = await getAccessToken()
+        const token = getToken()
         if (token) {
           request.headers.set('Authorization', `Bearer ${token}`)
         }
@@ -20,7 +18,7 @@ export const api = ky.extend({
     afterResponse: [
       async (_request, _options, response) => {
         if (response.status === 401) {
-          // Token expired — redirect to login
+          clearToken()
           window.location.href = '/login'
         }
       },
@@ -33,7 +31,9 @@ export const api = ky.extend({
 // Auth
 export const authApi = {
   register: (data: { email: string; password: string; full_name: string; org_name: string }) =>
-    api.post('auth/register', { json: data }).json(),
+    api.post('auth/register', { json: data }).json<{ access_token: string; token_type: string; expires_in: number }>(),
+  login: (data: { email: string; password: string }) =>
+    api.post('auth/login', { json: data }).json<{ access_token: string; token_type: string; expires_in: number }>(),
   getMe: () => api.get('auth/me').json<any>(),
   getOrg: () => api.get('auth/org').json<any>(),
 }

@@ -16,10 +16,16 @@ AutoSEO is an autonomous SEO platform that crawls websites, analyzes them for SE
 - `config.py` auto-converts `DATABASE_URL` to asyncpg format and strips `sslmode` param
 - SSL handled via `connect_args` in the engine
 
+### Authentication (Migrated from Supabase)
+- **No Supabase dependency** — auth is fully self-contained using FastAPI + bcrypt + python-jose
+- `/auth/register` and `/auth/login` endpoints issue JWTs signed with `SUPABASE_JWT_SECRET`
+- Frontend stores JWT in `localStorage` via `apps/web/src/lib/auth.ts`
+- `use-auth.ts` hook reads/writes the token directly — no Supabase JS client
+- Google OAuth button in UI throws a friendly error (not configured)
+
 ### Key Env Vars Required for Full Functionality
 - `DATABASE_URL` — auto-provisioned by Replit
-- `SUPABASE_URL` + `SUPABASE_ANON_KEY` — needed for frontend auth (Supabase JS client)
-- `SUPABASE_JWT_SECRET` — needed for backend JWT validation
+- `SUPABASE_JWT_SECRET` — set to a strong secret (already configured in Replit secrets)
 - `ANTHROPIC_API_KEY` — for AI analysis features
 - `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` — for billing
 

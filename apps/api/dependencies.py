@@ -28,11 +28,16 @@ async def get_db() -> AsyncSession:
 _redis_client: Optional[aioredis.Redis] = None
 
 
-async def get_redis() -> aioredis.Redis:
-    """Get or create a Redis connection."""
+async def get_redis() -> Optional[aioredis.Redis]:
+    """Get or create a Redis connection. Returns None if Redis is unavailable."""
     global _redis_client
     if _redis_client is None:
-        _redis_client = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
+        try:
+            client = aioredis.from_url(settings.REDIS_URL, decode_responses=True, socket_connect_timeout=1)
+            await client.ping()
+            _redis_client = client
+        except Exception:
+            return None
     return _redis_client
 
 
@@ -109,9 +114,12 @@ async def get_optional_user(
 # --- Rate Limiting ---
 async def rate_limit(
     request: Request,
-    redis: aioredis.Redis = Depends(get_redis),
+    redis: Optional[aioredis.Redis] = Depends(get_redis),
 ):
-    """Redis sliding window rate limiter — 100 requests per minute per IP."""
+    """Redis sliding window rate limiter — 100 requests per minute per IP. Skipped if Redis unavailable."""
+    if redis is None:
+        return  # Skip rate limiting if Redis is not available
+
     client_ip = request.client.host if request.client else "unknown"
     key = f"rate_limit:{client_ip}"
     window = 60  # seconds
